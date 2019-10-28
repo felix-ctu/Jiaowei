@@ -1,0 +1,182 @@
+BEGIN
+    DBMS_SCHEDULER.CREATE_SCHEDULE (
+    	   
+        repeat_interval  => 'FREQ=DAILY;BYDAY=MON,TUE,WED,THU,FRI,SAT,SUN;BYHOUR=2;BYMINUTE=0;BYSECOND=0',     
+        start_date => TO_TIMESTAMP_TZ('2016-10-19 15:36:17.000000000 ASIA/SHANGHAI','YYYY-MM-DD HH24:MI:SS.FF TZR'),
+        comments => '调度-业务查询',
+        schedule_name  => '"SCH_RPT_BUSIQUERY"');
+        
+END;
+
+
+BEGIN
+    DBMS_SCHEDULER.CREATE_JOB (
+            job_name => '"OSECDJW"."JOB_PROC_AUDIT"',
+            schedule_name => '"OSECDJW"."SCH_RPT_BUSIQUERY"',
+            job_type => 'STORED_PROCEDURE',
+            job_action => 'OSECDJW.P_PROC_AUDIT',
+            number_of_arguments => 0,
+            enabled => FALSE,
+            auto_drop => FALSE,
+            comments => '');
+
+    DBMS_SCHEDULER.SET_ATTRIBUTE( 
+             name => '"OSECDJW"."JOB_PROC_AUDIT"', 
+             attribute => 'logging_level', value => DBMS_SCHEDULER.LOGGING_OFF);
+  
+    DBMS_SCHEDULER.enable(
+             name => '"OSECDJW"."JOB_PROC_AUDIT"');
+END;
+
+
+--************************************************************************
+
+
+
+BEGIN
+    DBMS_SCHEDULER.CREATE_JOB (
+            job_name => '"OSECDJW"."JOB_PROC_BUSIQUERY_BUSINFO"',
+            schedule_name => '"OSECDJW"."SCH_RPT_BUSIQUERY"',
+            job_type => 'STORED_PROCEDURE',
+            job_action => 'OSECDJW.P_BUSIQUERY_BUSINFO',
+            number_of_arguments => 0,
+            enabled => FALSE,
+            auto_drop => FALSE,
+            comments => '调度作业-公交车辆信息');
+
+    DBMS_SCHEDULER.SET_ATTRIBUTE( 
+             name => '"OSECDJW"."JOB_PROC_BUSIQUERY_BUSINFO"', 
+             attribute => 'logging_level', value => DBMS_SCHEDULER.LOGGING_OFF);
+  
+    DBMS_SCHEDULER.enable(
+             name => '"OSECDJW"."JOB_PROC_BUSIQUERY_BUSINFO"');
+END;
+
+BEGIN
+    DBMS_SCHEDULER.CREATE_JOB (
+            job_name => '"OSECDJW"."JOB_PROC_BUSIQUERY_CORP"',
+            schedule_name => '"OSECDJW"."SCH_RPT_BUSIQUERY"',
+            job_type => 'STORED_PROCEDURE',
+            job_action => 'OSECDJW.P_BUSIQUERY_CORP',
+            number_of_arguments => 0,
+            enabled => FALSE,
+            auto_drop => FALSE,
+            comments => '调度作业-企业信息');
+
+    DBMS_SCHEDULER.SET_ATTRIBUTE( 
+             name => '"OSECDJW"."JOB_PROC_BUSIQUERY_CORP"', 
+             attribute => 'logging_level', value => DBMS_SCHEDULER.LOGGING_OFF);
+  
+    DBMS_SCHEDULER.enable(
+             name => '"OSECDJW"."JOB_PROC_BUSIQUERY_CORP"');
+END;
+
+
+BEGIN
+    DBMS_SCHEDULER.CREATE_JOB (
+            job_name => '"OSECDJW"."JOB_PROC_BUSIQUERY_EMP"',
+            schedule_name => '"OSECDJW"."SCH_RPT_BUSIQUERY"',
+            job_type => 'STORED_PROCEDURE',
+            job_action => 'OSECDJW.P_BUSIQUERY_EMP',
+            number_of_arguments => 0,
+            enabled => FALSE,
+            auto_drop => FALSE,
+            comments => '调度作业-人员信息');
+
+    DBMS_SCHEDULER.SET_ATTRIBUTE( 
+             name => '"OSECDJW"."JOB_PROC_BUSIQUERY_EMP"', 
+             attribute => 'logging_level', value => DBMS_SCHEDULER.LOGGING_OFF);
+  
+    DBMS_SCHEDULER.enable(
+             name => '"OSECDJW"."JOB_PROC_BUSIQUERY_EMP"');
+END;
+
+
+
+BEGIN
+    DBMS_SCHEDULER.CREATE_JOB (
+            job_name => '"OSECDJW"."JOB_PROC_BUSIQUERY_ROUTE"',
+            schedule_name => '"OSECDJW"."SCH_RPT_BUSIQUERY"',
+            job_type => 'STORED_PROCEDURE',
+            job_action => 'OSECDJW.P_BUSIQUERY_ROUTE',
+            number_of_arguments => 0,
+            enabled => FALSE,
+            auto_drop => FALSE,
+            comments => '调度作业-线路信息');
+
+    DBMS_SCHEDULER.SET_ATTRIBUTE( 
+             name => '"OSECDJW"."JOB_PROC_BUSIQUERY_ROUTE"', 
+             attribute => 'logging_level', value => DBMS_SCHEDULER.LOGGING_OFF);
+  
+    DBMS_SCHEDULER.enable(
+             name => '"OSECDJW"."JOB_PROC_BUSIQUERY_ROUTE"');
+END;
+
+
+BEGIN
+    DBMS_SCHEDULER.CREATE_JOB (
+            job_name => '"OSECDJW"."JOB_PROC_BUSIQUERY_SITE"',
+            schedule_name => '"OSECDJW"."SCH_RPT_BUSIQUERY"',
+            job_type => 'STORED_PROCEDURE',
+            job_action => 'OSECDJW.P_BUSIQUERY_SITE',
+            number_of_arguments => 0,
+            enabled => FALSE,
+            auto_drop => FALSE,
+            comments => '调度作业-场站信息');
+
+    DBMS_SCHEDULER.SET_ATTRIBUTE( 
+             name => '"OSECDJW"."JOB_PROC_BUSIQUERY_SITE"', 
+             attribute => 'logging_level', value => DBMS_SCHEDULER.LOGGING_OFF);
+  
+    DBMS_SCHEDULER.enable(
+             name => '"OSECDJW"."JOB_PROC_BUSIQUERY_SITE"');
+END;
+
+
+BEGIN
+    DBMS_SCHEDULER.CREATE_JOB (
+            job_name => '"OSECDJW"."JOB_PROC_BUSIQUERY_STATION"',
+            schedule_name => '"OSECDJW"."SCH_RPT_BUSIQUERY"',
+            job_type => 'STORED_PROCEDURE',
+            job_action => 'OSECDJW.P_BUSIQUERY_STATION',
+            number_of_arguments => 0,
+            enabled => FALSE,
+            auto_drop => FALSE,
+            comments => '调度作业-场站信息');
+
+    DBMS_SCHEDULER.SET_ATTRIBUTE( 
+             name => '"OSECDJW"."JOB_PROC_BUSIQUERY_STATION"', 
+             attribute => 'logging_level', value => DBMS_SCHEDULER.LOGGING_OFF);
+  
+    DBMS_SCHEDULER.enable(
+             name => '"OSECDJW"."JOB_PROC_BUSIQUERY_STATION"');
+END;
+
+
+BEGIN
+    DBMS_SCHEDULER.CREATE_JOB (
+            job_name => '"OSECDJW"."JOB_PROC_MACRO_CIA"',
+            schedule_name => '"OSECDJW"."SCH_RPT_BUSIQUERY"',
+            job_type => 'STORED_PROCEDURE',
+            job_action => 'OSECDJW.P_MACRO_CIA',
+            number_of_arguments => 0,
+            enabled => FALSE,
+            auto_drop => FALSE,
+            comments => '宏观分析-综合指标');
+
+    DBMS_SCHEDULER.SET_ATTRIBUTE( 
+             name => '"OSECDJW"."JOB_PROC_MACRO_CIA"', 
+             attribute => 'logging_level', value => DBMS_SCHEDULER.LOGGING_OFF);
+  
+    DBMS_SCHEDULER.enable(
+             name => '"OSECDJW"."JOB_PROC_MACRO_CIA"');
+END;
+
+
+BEGIN
+    DBMS_SCHEDULER.create_chain(
+        comments => '调度链-基础数据',
+        chain_name => 'OSECDJW.CHAIN_RPT_BUSIQUERY'
+    );
+      DBMS_SCHEDULER.enable(name=>'OSECDJW.CHAIN_RPT_BUSIQUERY');
+END;

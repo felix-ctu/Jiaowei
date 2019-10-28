@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="bus-info">
+    <![CDATA[
+      SELECT bus_id AS BusId,
+               card_id AS License,
+               bus_self_id AS Vin,
+               oil_type AS OilType,
+               bus_type AS BusType,
+               bus_operate_type AS BusOperateType,
+               bus_status AS BusStatus,
+               bus_length AS BusLength,
+               stdcoefficient AS StandardCoefficient,
+               approved_count AS ApprovedCount,
+               seat_count AS SeatCount,
+               stand_count AS StandCount,
+               standard_oil_num AS StandardOilNum,
+               buy_date AS BuyDate,
+               use_date AS UseDate,
+               floor(years_in_use*12) as useyears,
+               route_id AS RouteId,
+               org_id AS OrgId,
+               parent_org_id AS ParentOrgId,
+               area_code AS AreaCode,
+               is_active AS IsActive,
+               bus_grade AS BusGrade,
+               body_light_led AS BodyLightLED,
+               head_light_led AS HeadLightLED,
+               air_conditioned AS AirConditioned,
+               low_floor AS LowFloor,
+               ic_enabled AS ICEnabled,
+               bus_machine_number AS BusMachineNumber,
+               row_number() over (order by bus_id) as RowNumber,
+               count(*) over () as TotalItems
+      FROM rpt_busiquery_businfo
+    ]]>
+  </Query>
+</Report>

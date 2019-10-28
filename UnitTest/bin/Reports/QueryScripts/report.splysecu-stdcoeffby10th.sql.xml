@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="splysecu-stdcoeffby10th">
+    <![CDATA[
+      select * from rpt_splysecu_stdcoeffby10th t where t.area_code like '%' || :p_area_code || '%'
+      and t.population_type like '%' || :p_pop_type || '%'
+      and t.query_year >= :p_from
+      and t.query_year <= :p_to
+      and business_date = (SELECT Max(business_date) FROM rpt_splysecu_stdcoeffby10th)
+    ]]>
+  </Query>
+</Report>

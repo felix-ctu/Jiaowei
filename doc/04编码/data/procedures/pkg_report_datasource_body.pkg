@@ -1,0 +1,4426 @@
+create or replace package body pkg_report_datasource is
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : pkg_report_datasource                                                          *
+*                                                                                               *
+*  File Name   : pkg_report_datasource.pkg                                                      *
+*                                                                                               *
+*  Description : pkg_report_datasource                                                          *
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 1-Dec-16   1.0      Liu Mingshun      Initial release                                         *
+************************************************************************************************/
+
+function getbusinessdate (v_date date default NULL)
+return date
+as
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : getbusinessdate                                                            	*
+*                                                                                               *
+*  File Name   : getbusinessdate.sql                                                        	*
+*                                                                                               *
+*  Description : used for reports to get business_date                                         	*
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 23-Oct-16   1.0      Liu Mingshun      Initial release                                        *
+************************************************************************************************/
+	v_getbusinessdate  date;
+begin
+	if v_date is null
+	then 
+		select business_date into v_getbusinessdate
+		from rpt_set_business_date;
+	else 
+		v_getbusinessdate := v_date;
+	end if;
+	
+	return v_getbusinessdate;
+end;
+
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_pre_batch                                                      				*
+*                                                                                               *
+*  File Name   : p_pre_batch.prc                                                  				*
+*                                                                                               *
+*  Description : p_pre_batch                                                      				*
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 1-Oct-16   1.0      Liu Mingshun      Initial release                                         *
+************************************************************************************************/
+procedure p_pre_batch(p_date in date default null)
+as
+	v_date 		date;
+	v_monthend 	date;
+	v_pre_date	date;
+begin
+	execute immediate 'truncate table rpt_set_business_date drop storage';
+	if p_date is not null
+	then 
+		v_date := p_date;
+	else
+		begin
+			select max(rundatadate) into v_date
+			from bz_busrunrecordld;
+			
+		exception when others then
+			v_date := trunc(sysdate-1);
+		end;
+	end if;
+	v_monthend := trunc(add_months(v_date,1),'mm')-1;
+	v_pre_date := v_date -1;
+	insert into rpt_set_business_date values (v_date, v_monthend, v_pre_date);
+    commit;
+end;
+
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_enrich_map_org_regional                                                      *
+*                                                                                               *
+*  File Name   : p_enrich_map_org_regional.prc                                                  *
+*                                                                                               *
+*  Description : p_enrich_map_org_regional                                                      *
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 1-Oct-16   1.0      Liu Mingshun      Initial release                                         *
+************************************************************************************************/
+procedure p_enrich_map_org_regional
+as
+begin
+    execute immediate 'truncate table map_org_regional drop storage';
+	insert into map_org_regional (orgid, orgname)
+	select orgid, orgname
+	from mcorginfogs
+	where orgid like '2%'
+	and orgid not in ('2120','2199')
+	and parentorgid not in ('2120','2199');
+	commit;
+
+	update map_org_regional a
+	set (orggroupid, orggroup, regional_category) = 
+		(select p.orgid, p.orgname, '中心城区'
+		 from mcorginfogs b, mcorginfogs p
+		 where a.orgid = b.orgid
+		 and b.parentorgid = p.orgid
+		 and p.orgid in ('2101','2104','2102','2103','2105','2106')
+		);
+	commit;
+
+	update map_org_regional a
+	set (orggroupid, orggroup, regional_category) = 
+		(select b.orgid, b.orgname, '中心城区'
+		 from mcorginfogs b
+		 where a.orgid = b.orgid
+		 and b.orgid in ('210000','2101','2104','2102','2103','2105','2106')
+		)
+	where a.orgid in ('210000','2101','2104','2102','2103','2105','2106');
+	commit;
+
+	update map_org_regional a
+	set (orggroupid, orggroup, regional_category) = 
+		(select p.orgid, p.orgname, '空港'
+		 from mcorginfogs b, mcorginfogs p
+		 where a.orgid = b.orgid
+		 and b.parentorgid = p.orgid
+		 and p.orgid in ('2108')
+		)
+	where a.orggroup is null;
+	commit;
+
+	update map_org_regional a
+	set (orggroupid, orggroup, regional_category) = 
+		(select b.orgid, b.orgname, '空港'
+		 from mcorginfogs b
+		 where a.orgid = b.orgid
+		 and b.orgid in ('2108')
+		)
+	where a.orggroup is null;
+	commit;
+
+	update map_org_regional a
+	set regional_category = '近郊区'
+	where a.orggroup is null;
+	commit;
+	
+	update map_org_regional a
+	set (orggroupid, orggroup) = 
+		(select b.orgid, b.orgname
+		 from mcorginfogs b
+		 where a.orgid = b.orgid
+		 and b.parentorgid = '210000'
+		)
+	where a.regional_category = '近郊区'
+	and a.orggroup is null;
+	commit;
+	
+	update map_org_regional a
+	set (orggroupid, orggroup) = 
+		(select p.orgid, p.orgname
+		 from mcorginfogs b, mcorginfogs p
+		 where a.orgid = b.orgid
+		 and b.parentorgid = p.orgid
+		)
+	where a.regional_category = '近郊区'
+	and a.orggroup is null;
+	commit;
+
+	insert into map_org_regional (orgid,orgname,orggroupid,orggroup,regional_category) 
+	values ('远郊区','远郊区','远郊区','远郊区','远郊区');
+	commit;	
+	
+end;
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_busiquery_businfo                                                           	*
+*                                                                                               *
+*  File Name   : p_busiquery_businfo.prc                                                        	*
+*                                                                                               *
+*  Description : p_busiquery_businfo                                                            	*
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 1-Oct-16   1.0      Liu Mingshun      Initial release                                         *
+************************************************************************************************/
+procedure p_busiquery_businfo
+as
+	v_date date := getbusinessdate;	
+begin
+    delete from rpt_busiquery_businfo where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_busiquery_businfo where business_date = v_date;
+	commit;
+
+    insert /*+append*/ into rpt_busiquery_businfo (
+		bus_id 				,
+		card_id 			,
+		bus_self_id 		,
+		oil_type 			,
+		bus_type 			,
+		bus_length 			,
+		buy_date 			,
+		use_date 			,
+		bus_status 			,
+		bus_operate_type    ,
+		seat_count 			,
+		stand_count 		,
+		route_id 			,
+		org_id 				,
+		org_group			,
+		parent_org_id 		,
+		area_code 			,
+		is_active 			,
+		bus_grade 			,
+		body_light_led 		,
+		head_light_led 		,
+		air_conditioned 	,
+		low_floor 			,
+		ic_enabled 			,
+		bus_machine_number  ,
+		stdcoefficient		,
+		approved_count		,
+		standard_oil_num
+    )
+    select 
+      a.busid									bus_id 				,
+      a.cardid									card_id 			,
+      a.busselfid								bus_self_id 		,
+      decode(a.oiltype,'CNG','天然气(CNG)','LNG','液化天然气(LNG)',oiltype)	oil_type,
+      a.bustype 								bus_type 			,
+      a.buslength 								bus_length 			,
+      a.buydate 								buy_date 			,
+      a.usedate 								use_date 			,
+      a.busstatus 								bus_status 			,
+	  a.busoperatetype							bus_operate_type	,
+      a.seatcount 								seat_count 			,
+      a.standcount 								stand_count 		,
+      null 										route_id 			,
+      a.orgid 									org_id 				,
+	  null  									org_group			,
+      null 										parent_org_id 		,
+      null 										area_code 			,  
+      a.isactive 								is_active 			,
+      a.busgrade 								bus_grade 			,
+      decode(a.hasinbusled,'1','有','无') 		body_light_led 		,
+      decode(a.hasheadbusled,'1','有','无') 	head_light_led 		,
+      decode(a.hascondition,'1','是','否') 		air_conditioned 	,
+      decode(a.islowfloor,'1','是','否') 		low_floor 			,
+      decode(a.hasiccardeqmt,'1','有','无') 	ic_enabled 			,
+      a.productid	 							bus_machine_number  ,
+	  a.stdcoefficient							stdcoefficient		,
+	  nvl(a.seatcount,0)+nvl(a.standcount,0)	approved_count		,
+	  standardoilnum							standard_oil_num
+	from mcbusinfogs a
+	where a.isactive=1;
+    commit;
+    
+	update rpt_busiquery_businfo set business_date = v_date where business_date is null;
+	commit;
+	
+	--核定载客数
+    update rpt_busiquery_businfo rpt
+        set route_id = (select wmsys.wm_concat(b.routeid)
+					    from mcrbusroutegs b
+					    where rpt.bus_id = b.busid
+                       )
+    where exists (select 1 from mcrbusroutegs c where rpt.bus_id = c.busid)
+	and rpt.business_date = v_date;
+    commit;
+    
+    update rpt_busiquery_businfo rpt
+        set (org_name,parent_org_id) = (select b.parentorgid,b.orgname
+							 from mcorginfogs b
+							 where rpt.org_id = b.orgid
+							 and b.isactive = 1
+							 )
+    where exists (select 1 from mcorginfogs c where rpt.org_id = c.orgid and c.isactive = 1)
+	and rpt.business_date = v_date;
+    commit;
+	
+    update rpt_busiquery_businfo rpt
+        set bus_status = (select m.code_desc
+						  from map_code_master m
+						  where rpt.bus_status = m.code_value
+						  and m.code_category = 'BUS_STATUS'
+						 )
+	where rpt.business_date = v_date;
+    commit;
+	
+    update rpt_busiquery_businfo rpt
+        set bus_operate_type = (select m.code_desc
+								from map_code_master m
+								where rpt.bus_operate_type = m.code_value
+								and m.code_category = 'BUS_OPERATE_TYPE'
+								)
+	where rpt.business_date = v_date;
+    commit;
+    
+    update rpt_busiquery_businfo rpt
+        set (org_group,org_group_id, area_code) = (select b.orggroup,b.orggroupid,b.regional_category
+									 from map_org_regional b
+									 where rpt.org_id = b.orgid
+									 )
+    where exists (select 1 from map_org_regional c where rpt.org_id = c.orgid)
+	and rpt.business_date = v_date;
+    commit;
+	
+end;
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_busiquery_corp                                                           	*
+*                                                                                               *
+*  File Name   : p_busiquery_corp.prc                                                        	*
+*                                                                                               *
+*  Description : p_busiquery_corp                                                            	*
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 1-Oct-16   1.0      Liu Mingshun      Initial release                                         *
+************************************************************************************************/
+procedure p_busiquery_corp
+as
+	v_date date := getbusinessdate;	
+begin
+
+    delete from rpt_busiquery_corp where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_busiquery_corp where business_date = v_date;
+	commit;
+
+    insert /*+append*/ into rpt_busiquery_corp (
+		org_id 			 ,
+		org_name 		 ,
+		linkman 		 ,
+		principal 		 ,
+		emp_count 		 ,
+		bus_count 		 ,
+		route_count 	 ,
+		site_count 		 ,
+		driver_count 	 ,
+		address 		 ,
+		register_date	 ,
+		telephone 		 ,
+		fax 			 ,
+		post 			 ,
+		parent_org_id 	 ,
+		region_area 	 ,
+		area_code 		 ,
+		parent_org_name  ,
+		org_grade 		 ,
+		org_group		 ,
+		org_group_id
+    )
+    select 
+		org.orgid 			org_id 			 ,
+		org.orgname         org_name 		 ,
+		org.linkman         linkman 		 ,
+		org.principal       principal 		 ,
+		null  				emp_count 		 ,
+		null  				bus_count 		 ,
+		null  				route_count 	 ,
+		null  				site_count 		 ,
+		null  				driver_count 	 ,
+		org.address         address 		 ,
+		org.registerdate    register_date	 ,
+		org.telephone       telephone 		 ,
+		org.fax             fax 			 ,
+		org.post            post 			 ,
+		org.parentorgid     parent_org_id 	 ,
+		org.regionarea      region_area 	 ,
+		null				area_code 		 ,
+		org.parentorgid     parent_org_name  ,
+		org.orggrade        org_grade		 ,
+		null				org_group		 ,
+		null				org_group_id
+	from mcorginfogs org
+	where org.isactive=1
+	and org.orgtype = 1 
+	and exists (select 1 from mcorginfogs p where org.parentorgid = p.orgid and p.isactive = 1);
+    commit;
+	  
+	update rpt_busiquery_corp set business_date = v_date where business_date is null;
+	commit;
+	
+    update rpt_busiquery_corp rpt
+        set (emp_count,driver_count) = (select count(*),sum(decode(positiontype,'1',1,0))
+					     from mcemployeeinfogs a
+					     where a.orgid = rpt.org_id
+					     and a.isactive = 1
+                        )
+    where rpt.business_date = v_date;
+    commit;
+
+	update rpt_busiquery_corp rpt
+        set emp_count = nvl((select sum(emp_count)
+					     from rpt_busiquery_corp a
+					     where a.business_date = v_date
+						 and a.parent_org_id = rpt.org_id
+                        )+emp_count,0)
+    where rpt.business_date = v_date
+	and rpt.parent_org_id = '210000';
+    commit;
+	
+	update rpt_busiquery_corp rpt
+        set driver_count = nvl((select sum(driver_count)
+					     from rpt_busiquery_corp a
+					     where a.business_date = v_date
+						 and a.parent_org_id = rpt.org_id
+                        )+driver_count,0)
+    where rpt.business_date = v_date
+	and rpt.parent_org_id = '210000';
+    commit; 
+
+    update rpt_busiquery_corp rpt
+        set bus_count = nvl((select count(*)
+					     from mcbusinfogs a
+					     where a.orgid = rpt.org_id
+					     and a.isactive = 1
+                        ),0)
+    where rpt.business_date = v_date;
+    commit; 
+	
+	update rpt_busiquery_corp rpt
+        set bus_count = nvl((select sum(bus_count) bus
+					     from rpt_busiquery_corp a
+					     where a.business_date = v_date
+						 and a.parent_org_id = rpt.org_id
+                        )+bus_count,0)
+    where rpt.business_date = v_date
+	and rpt.parent_org_id = '210000';
+    commit; 
+	
+    update rpt_busiquery_corp rpt
+        set route_count = nvl((select count(*)
+					     from mcrouteinfogs a
+					     where a.orgid = rpt.org_id
+					     and a.isactive = 1
+						 and v_date between a.begindate and a.enddate
+						 and exists (select 1 from mcsubrouteinfogs b 
+									where a.routeid = b.routeid 
+									and b.isactive=1 
+									and v_date between b.begindate and b.enddate)
+                        ),0)
+    where rpt.business_date = v_date;
+    commit; 
+	
+	update rpt_busiquery_corp rpt
+        set route_count = nvl((select sum(route_count) route
+					     from rpt_busiquery_corp a
+					     where a.business_date = v_date
+						 and a.parent_org_id = rpt.org_id
+                        )+route_count,0)
+    where rpt.business_date = v_date
+	and rpt.parent_org_id = '210000';
+    commit; 
+
+    update rpt_busiquery_corp rpt
+        set site_count = nvl((select count(*)
+					     from mcsiteinfogs a
+					     where a.orgid = rpt.org_id
+					     and a.isactive = 1
+						 and v_date between a.usedate and a.stopdate
+                        ),0)
+    where rpt.business_date = v_date;
+    commit; 
+
+	update rpt_busiquery_corp rpt
+        set site_count = nvl((select sum(site_count) site
+					     from rpt_busiquery_corp a
+					     where a.business_date = v_date
+						 and a.parent_org_id = rpt.org_id
+                        )+site_count,0)
+    where rpt.business_date = v_date
+	and rpt.parent_org_id = '210000';
+    commit; 
+	
+    update rpt_busiquery_corp rpt
+        set parent_org_name = (select a.orgname
+							   from mcorginfogs a
+							   where a.orgid = rpt.parent_org_id
+							   and a.isactive = 1
+                              )
+    where exists (select 1 from mcorginfogs b where rpt.parent_org_id = b.orgid and b.isactive = 1)
+	and rpt.business_date = v_date;
+    commit;
+	
+	
+    update rpt_busiquery_corp rpt
+        set (org_group,org_group_id,area_code) = (select b.orggroup,b.orggroupid, b.regional_category
+									 from map_org_regional b
+									 where rpt.org_id = b.orgid
+									 )
+    where exists (select 1 from map_org_regional c where rpt.org_id = c.orgid)
+	and rpt.business_date = v_date;
+    commit;
+	
+end;
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_busiquery_emp                                                           	*
+*                                                                                               *
+*  File Name   : p_busiquery_emp.prc                                                        	*
+*                                                                                               *
+*  Description : p_busiquery_emp                                                            	*
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 1-Oct-16   1.0      Liu Mingshun      Initial release                                         *
+************************************************************************************************/
+procedure p_busiquery_emp
+as
+	v_date date := getbusinessdate;	
+begin
+    delete from rpt_busiquery_emp where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_busiquery_emp where business_date = v_date;
+	commit;
+
+    insert /*+append*/ into rpt_busiquery_emp (
+		id					,
+		emp_name			,
+		position_type		,
+		sex					,
+		start_date			,
+		lisence_type		,
+		org_name			,
+		route_id			,
+		emp_id				,
+		designation			,
+		ic_card				,
+		drive_experience	,
+		certificate_number	,
+		diploma				,
+		birthdate	        ,
+		salary		        ,
+		org_id				,
+		parent_org_id		,
+		org_group			,
+		area_code			,
+		org_group_id
+    )
+    select 
+		a.cardid 		id					,
+		a.empname 		emp_name			,
+		a.positiontype 	position_type		,
+		m.code_desc 	sex					,
+		a.startdate 	start_date			,
+		a.drivetype  	lisence_type		,       
+		null 			org_name			,
+		null 			route_id			,
+		a.empid 		emp_id				,
+		null 			designation			,
+		a.iccardid 		ic_card				,
+		round(months_between(sysdate,a.getdrivedate)/12,1) drive_experience	,
+		a.opserviceid	certificate_number	,
+		a.diploma		diploma				,
+		a.birthdate		birthdate,
+		null		    salary    			,
+		a.orgid 		org_id				,
+		null 			parent_org_id		,
+		null			org_group			,
+		null 			area_code			,
+		null			org_group_id
+    from mcemployeeinfogs a,  map_code_master m
+	where a.sex = m.code_value
+	and m.code_category = 'SEX'
+	and a.isactive = 1
+	and ascii(substr(a.empname,1,1)) not between 48 and 122 ;
+    commit;
+        
+	update rpt_busiquery_emp set business_date = v_date where business_date is null;
+	commit;
+		
+    update rpt_busiquery_emp rpt
+        set (org_name, parent_org_id) = (select b.orgname, b.parentorgid
+										from mcorginfogs b
+										where rpt.org_id = b.orgid
+										and b.isactive = 1
+										)
+    where exists (select 1 from mcorginfogs c where rpt.org_id = c.orgid and c.isactive = 1)
+	and rpt.business_date = v_date;
+    commit;
+	
+    update rpt_busiquery_emp rpt
+        set route_id = (select wmsys.wm_concat(c.routename)
+					    from mcremproutegs b, mcrouteinfogs c
+					    where rpt.emp_id = b.empid
+						and b.routeid=c.routeid
+						and c.isactive=1
+                       )
+    where exists (select 1 from mcremproutegs c where rpt.emp_id = c.empid)
+	and rpt.business_date = v_date;
+    commit;
+	
+    update rpt_busiquery_emp rpt
+        set position_type = (select m.code_desc
+							from map_code_master m
+							where rpt.position_type = m.code_value
+							and m.code_category = 'POSITIONTYPE'
+							)
+	where rpt.business_date = v_date;
+    commit;
+	
+    update rpt_busiquery_emp rpt
+        set (org_group,org_group_id,area_code) = (select b.orggroup,b.orggroupid, b.regional_category
+									 from map_org_regional b
+									 where rpt.org_id = b.orgid
+									 )
+    where exists (select 1 from map_org_regional c where rpt.org_id = c.orgid)
+	and rpt.business_date = v_date;
+    commit;
+
+end;
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_busiquery_route                                                           	*
+*                                                                                               *
+*  File Name   : p_busiquery_route.prc                                                        	*
+*                                                                                               *
+*  Description : p_busiquery_route                                                            	*
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 1-Oct-16   1.0      Liu Mingshun      Initial release                                         *
+************************************************************************************************/
+procedure p_busiquery_route
+as
+	v_date date := getbusinessdate;	
+begin
+
+    delete from rpt_busiquery_route where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_busiquery_route where business_date = v_date;
+	commit;
+
+    insert /*+append*/ into rpt_busiquery_route (
+		sub_route_id 		,
+		route_id 			,
+		route_name 			,
+		bus_count 			,
+		begin_date 			,
+		linkman 			,
+		route_grade 		,
+		route_style			,
+		org_id 				,
+		parent_org_id 		,
+		area_code 			,
+		end_date			,
+		isactive			,
+		route_type 			,
+		is_end_with_alphabet,
+		is_suburban 	    ,
+		org_group 			,
+		org_group_id
+    )
+    select 
+		null 								sub_route_id        ,
+		a.routeid 							route_id            ,
+		a.routename 						route_name          ,
+		null	 							bus_count           ,
+		a.begindate 						begin_date          ,
+		null 								linkman             ,
+		a.routegrade 						route_grade         ,
+		a.routestyle						route_style			,
+		a.orgid 							org_id              ,
+		null 								parent_org_id       ,
+		null 								area_code 			,
+		a.enddate							end_date			,
+		decode(a.isactive,'1','是','否') 	isactive			,
+		null								route_type			,
+		case when ascii(substr(a.routename,-1,1)) between 65 and 122
+			 then '是' else '否'
+		end									is_end_with_alphabet,
+		null								is_suburban			,
+		null								org_group			,
+		null								org_group_id
+	from mcrouteinfogs a
+	where a.isactive = 1
+	and v_date between a.begindate and a.enddate
+	and exists (select 1 from mcsubrouteinfogs b 
+				where a.routeid = b.routeid 
+				and b.isactive=1 
+				and v_date between b.begindate and b.enddate)
+	;
+    commit;
+      
+	update rpt_busiquery_route set business_date = v_date where business_date is null;
+	commit;
+	  
+    update rpt_busiquery_route rpt
+        set sub_route_id = (select wmsys.wm_concat(a.subrouteid)
+							   from mcsubrouteinfogs a
+							   where rpt.route_id = a.routeid
+							   and a.isactive = 1
+							   and v_date between a.begindate and a.enddate
+                              )
+    where exists (select 1 from mcsubrouteinfogs b 
+				  where rpt.route_id = b.routeid 
+				  and b.isactive = 1
+				  and v_date between b.begindate and b.enddate)
+	and rpt.business_date = v_date;
+    commit;
+  
+    update rpt_busiquery_route rpt
+        set (linkman, parent_org_id, org_name) = (select b.linkman, b.parentorgid, b.orgname
+										from mcorginfogs b
+										where rpt.org_id = b.orgid
+										and b.isactive = 1
+										)
+    where exists (select 1 from mcorginfogs c where rpt.org_id = c.orgid and c.isactive = 1)
+	and rpt.business_date = v_date;
+    commit;
+	
+    update rpt_busiquery_route rpt
+        set bus_count = (select count(a.busid)
+						from mcrbusroutegs a
+						where rpt.route_id = a.routeid
+						)
+    where exists (select 1 from mcrbusroutegs c where rpt.route_id = c.routeid)
+	and business_date = v_date;
+    commit;
+	
+    update rpt_busiquery_route rpt
+        set route_grade_manual = 
+					(select a.route_grade
+					from map_route_grade a
+					where rpt.route_id = a.route_id
+					)
+	where rpt.business_date = v_date;
+    commit;
+	
+    update rpt_busiquery_route rpt
+        set route_grade = (case when route_name in ('K1','K2') 			then '快线'
+								when route_grade_manual = '支线' 		then '支线'
+								when route_grade_manual = '社区巴士'　	then '微线'
+								else '干线'
+							end)
+	where rpt.business_date = v_date;
+    commit;
+	
+    update rpt_busiquery_route rpt
+        set (org_group,org_group_id, area_code) = (select b.orggroup,b.orggroupid, b.regional_category
+									 from map_org_regional b
+									 where rpt.org_id = b.orgid
+									 )
+    where exists (select 1 from map_org_regional c where rpt.org_id = c.orgid)
+	and rpt.business_date = v_date;
+    commit;
+	
+	update rpt_busiquery_route rpt set route_type = area_code
+	where rpt.business_date = v_date;
+    commit;
+	
+	update rpt_busiquery_route rpt 
+		set route_length = (
+							select sum(routelength)
+							from (
+							select a.routeid, a.subrouteid,'单程', sum(a.sngmile)/2 routelength
+							from mcsegmentinfogs a, mcsubrouteinfogs b
+							where rundirection in ('1','2')
+							and a.subrouteid = b.subrouteid
+							and ismainsub = 1
+							and v_date between b.begindate and b.enddate
+							group by a.routeid, a.subrouteid
+							union all
+							select a.routeid, a.subrouteid,'环线', sum(sngmile) routelength
+							from mcsegmentinfogs a, mcsubrouteinfogs b
+							where rundirection =3
+							and b.ismainsub = 1
+							and a.subrouteid = b.subrouteid
+							and v_date between b.begindate and b.enddate
+							group by a.routeid, a.subrouteid
+							) a
+							where a.routeid = rpt.route_id
+						)
+	where rpt.business_date = v_date;
+	commit;
+		
+	--***********************************************************************************
+	--首末站点
+    delete from rpt_busiquery_route_smzd where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_busiquery_route_smzd where business_date = v_date;
+	commit;
+
+    insert /*+append*/ into rpt_busiquery_route_smzd (
+		sn 			   ,
+		route_id 	   ,
+		segment_name   ,
+		fst_station_no ,
+		fst_station    ,
+		lst_station_no ,
+		lst_station    ,
+		isactive 	
+    )
+    select 
+		rownum 								sn, 
+		a.routeid							route_id, 
+		a.segmentname						segment_name, 
+		null								fst_station_no,
+		a.fststationid						fst_station, 
+		null								lst_station_no,
+		a.lststationid						lst_station, 
+		decode(a.isactive,'1','是','否')	isactive
+	from mcsegmentinfogs a
+	where exists (select 1 from rpt_busiquery_route b where a.routeid = b.route_id and b.business_date = v_date);
+    commit;
+        
+	update rpt_busiquery_route_smzd set business_date = v_date where business_date is null;
+	commit;
+
+    update rpt_busiquery_route_smzd rpt
+        set (fst_station,fst_station_no) = (select a.stationname, a.stationno
+											from mcstationinfogs a
+											where a.stationid = rpt.fst_station
+										)
+	where rpt.business_date = v_date;
+    commit;
+    
+    update rpt_busiquery_route_smzd rpt
+        set (lst_station,lst_station_no) = (select a.stationname, a.stationno
+										    from mcstationinfogs a
+										    where a.stationid = rpt.lst_station
+										  )
+	where rpt.business_date = v_date;						  
+    commit;
+	
+	--途径站点
+	--execute immediate 'truncate table rpt_busiquery_route_tjzd drop storage';
+    delete from rpt_busiquery_route_tjzd where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_busiquery_route_tjzd where business_date = v_date;
+	commit;
+
+    insert /*+append*/ into rpt_busiquery_route_tjzd (
+		sn				  ,
+		route_id		  ,
+		sub_route_name    ,
+		segment_id		  ,
+		segment_name      ,
+		run_direction	  ,
+		station_no        ,
+		station_name      ,
+		station_type      ,
+		electronic_board  ,
+		shelter			  ,
+		harbor_shaped 	  ,
+		station_length    ,
+		region_area       ,
+		area_code 		  ,
+		single_serial_id  ,
+		dual_serial_id    ,
+		longitude 		  ,
+		latitude          
+    )
+	select 
+		rownum									sn				,
+		a.routeid								route_id		,
+		a.subrouteid 							sub_route_name	,
+		a.segmentid								segment_id		,
+		null									segment_name    ,
+		null									run_direction	,
+		c.stationno								station_no      ,
+		c.stationname							station_name    ,
+		a.stationtype							station_type    ,
+		decode(c.haseleboard,'1','有','无') 	electronic_board,
+		decode(c.haswaitingboisk,'1','有','无') shelter			,
+		decode(c.isfleetstation,'1','是','否')	harbor_shaped 	,
+		c.stationlength 						station_length  ,
+		c.regionarea							region_area     ,
+		null 									area_code 		,
+		a.sngserialid 							single_serial_id,
+		a.dualserialid 							dual_serial_id  ,
+		c.longitude 							longitude 		,
+		c.latitude 								latitude        
+	from mcrsegmentstationgs a, mcstationinfogs c
+	where a.isactive = 1
+	and a.stationid = c.stationid
+	and exists (select 1 from rpt_busiquery_route rpt where rpt.route_id = a.routeid and rpt.business_date = v_date)
+	and exists (select 1 from mcsubrouteinfogs b 
+				  where a.subrouteid = b.subrouteid
+				  and b.isactive = 1
+				  and v_date between b.begindate and b.enddate)
+	order by a.segmentid, a.sngserialid
+	;
+	commit;
+
+	update rpt_busiquery_route_tjzd set business_date = v_date where business_date is null;
+	commit;
+	
+    update rpt_busiquery_route_tjzd rpt
+        set sub_route_name = (select a.subroutename
+					     from mcsubrouteinfogs a
+					     where a.subrouteid = rpt.sub_route_name
+                          )
+	where rpt.business_date = v_date;
+    commit;
+	
+    update rpt_busiquery_route_tjzd rpt
+        set station_type = (select a.code_desc
+					     from map_code_master a
+					     where a.code_value = rpt.station_type
+						 and a.code_category = 'STATIONTYPE'
+                          )
+	where rpt.business_date = v_date;
+    commit;
+	
+    update rpt_busiquery_route_tjzd rpt
+        set (segment_name,run_direction)
+						= (select a.segmentname, a.rundirection
+							from mcsegmentinfogs a
+							where a.segmentid = rpt.segment_id
+                          )
+	where rpt.business_date = v_date;
+    commit;
+	
+    update rpt_busiquery_route_tjzd rpt
+        set area_code = (select a.area_code
+					     from rpt_busiquery_route a
+					     where a.route_id = rpt.route_id
+						 and a.business_date = rpt.business_date
+                          )
+	where rpt.business_date = v_date;
+    commit;
+	
+	--峰段划分
+	--execute immediate 'truncate table rpt_busiquery_route_fdhf drop storage';
+    delete from rpt_busiquery_route_fdhf where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_busiquery_route_fdhf where business_date = v_date;
+	commit;
+
+    insert /*+append*/ into rpt_busiquery_route_fdhf (
+		id 					,
+        route_id 			,
+        name 			,
+        week_start 			,
+        week_end 			,
+        start_time 			,
+        end_time 			,
+        departure_interval 	,
+        turnaround_time 	
+    )
+	select 
+		rownum 					id 					,
+		routeid					route_id 			,
+		timephasename			name 			,
+		beginweek				week_start 			,
+		endweek					week_end 			,
+		starttime				start_time 			,
+		endtime					end_time 			,
+		timephaseinterval		departure_interval 	,
+		timephasecircletime		turnaround_time 	
+	from mcroutetimephasegs a
+	where exists (	select 1 
+					from rpt_busiquery_route rpt 
+					where rpt.route_id = a.routeid
+					and rpt.business_date = v_date
+				);
+	commit;
+	
+	update rpt_busiquery_route_fdhf set business_date = v_date where business_date is null;
+	commit;
+	
+end;
+
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_busiquery_site                                                           	*
+*                                                                                               *
+*  File Name   : p_busiquery_site.prc                                                        	*
+*                                                                                               *
+*  Description : p_busiquery_site                                                            	*
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 1-Oct-16   1.0      Liu Mingshun      Initial release                                         *
+************************************************************************************************/
+procedure p_busiquery_site
+as
+	v_date date := getbusinessdate;
+begin
+
+    delete from rpt_busiquery_site where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_busiquery_site where business_date = v_date;
+	commit;
+
+    insert /*+append*/ into rpt_busiquery_site (
+		site_id			,
+		org_id			,
+		site_name		,
+		site_type		,
+		longitude		,
+		latitude		,
+		cctv			,
+		site_from		,
+		site_used_for	,
+		route_name		,
+		area_code		,
+		region_area		,
+		site_volume 	,
+		site_square
+    )
+    select 
+		null 		                 	 site_id		,
+		null 		                 	 org_id			,
+		a.site_name 		             site_name		,
+		a.site_type_actual               site_type		,
+		a.longitude                		 longitude		, 
+		a.latitude	                 	 latitude		, 
+		'有'							 cctv			,
+		a.site_from						 site_from		,
+		''			 					 site_used_for	,
+		a.oper_route					 route_name		,
+		a.area_code						 area_code		,
+		a.region_area 					 region_area	,
+		null			 				 site_volume	,
+		a.site_square      				 site_square
+	from rpt_site_from_cdjw a
+	;
+    commit;
+
+	update rpt_busiquery_site set business_date = v_date where business_date is null;
+	commit;
+
+end;
+
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_busiquery_station                                                            *
+*                                                                                               *
+*  File Name   : p_busiquery_station.prc                                                        *
+*                                                                                               *
+*  Description : p_busiquery_station                                                            *
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 1-Oct-16   1.0      Liu Mingshun      Initial release                                         *
+************************************************************************************************/
+procedure p_busiquery_station
+as
+	v_date date := getbusinessdate;
+begin
+
+    delete from rpt_busiquery_station where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_busiquery_station where business_date = v_date;
+	commit;
+
+    insert /*+append*/ into rpt_busiquery_station (
+		station_id 		,
+		station_no		,
+		station_name 	,
+		electronic_board,
+		shelter 		,
+		harbor_shaped 	,
+		hange_station	,
+		length 			,
+		area_code 		,
+		routes 			,
+		longitude 		,
+		latitude 		,
+		org_id 			,
+		org_group		,
+		org_group_id	,
+		parent_org_id
+    )
+    select
+		a.stationid 							station_id 		,
+		a.stationno								station_no		,
+		a.stationname 							station_name 	,
+		decode(a.haseleboard,'1','有','无') 	electronic_board,
+		decode(a.haswaitingboisk,'1','有','无') shelter			,
+		decode(a.isfleetstation,'1','是','否')	harbor_shaped 	,
+		decode(a.ishangestation,'1','是','否')	hange_station 	,
+		a.stationlength 						length 			,
+		null 									area_code 		,
+		null 									routes 			,
+		a.longitude 							longitude 		,
+		a.latitude 								latitude 		,
+		null 									org_id 			,
+		null									org_group		,
+		null									org_group_id	,
+		null 									parent_org_id
+	from mcstationinfogs a
+	where a.isactive = 1;	
+    commit;
+        
+	update rpt_busiquery_station set business_date = v_date where business_date is null;
+	commit;
+		
+    update rpt_busiquery_station rpt
+        set routes = (select wmsys.wm_concat(to_char(b.routename))
+					  from mcrroutestationgs a, mcrouteinfogs b
+					  where a.stationid = rpt.station_id
+					  and a.routeid = b.routeid
+					  and b.isactive = 1
+					  )
+	where rpt.business_date = v_date;
+    commit;
+      
+    update rpt_busiquery_station rpt
+        set station_id = station_no
+	where rpt.business_date = v_date;
+    commit;  
+	
+    update rpt_busiquery_station rpt
+        set parent_org_id = (select b.parentorgid
+							 from mcorginfogs b
+							 where rpt.org_id = b.orgid
+							 and b.isactive = 1
+							 )
+    where exists (select 1 from mcorginfogs c where rpt.org_id = c.orgid and c.isactive = 1)
+	and rpt.business_date = v_date;
+    commit;
+	
+    update rpt_busiquery_station rpt
+        set (org_group, org_group_id, area_code) = (select b.orggroup, b.orggroupid, b.regional_category
+									 from map_org_regional b
+									 where rpt.org_id = b.orgid
+									 )
+    where exists (select 1 from map_org_regional c where rpt.org_id = c.orgid)
+	and rpt.business_date = v_date;
+    commit;
+	  
+	update rpt_busiquery_station rpt set area_code = '中心城区', org_group = '成都市公共交通集团公司' 
+	where business_date = v_date;
+    commit;
+
+end;
+
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_infra_info                                                            		*
+*                                                                                               *
+*  File Name   : p_infra_info.prc                                                        		*
+*                                                                                               *
+*  Description : p_infra_info                                                            		*
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 11-Nov-16   1.0      Liu Mingshun      Initial release                                         *
+************************************************************************************************/
+procedure p_infra_info
+as
+	v_date				date:=getbusinessdate;
+	v_partition			varchar2(20);
+begin
+
+	v_partition := 'P_'||to_char(v_date,'yyyymm');
+
+	--***************************公交车辆**********************
+    delete from rpt_infra_bus where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_infra_bus where business_date = v_date;
+	commit;
+	
+    insert /*+append*/ into rpt_infra_bus (
+		business_date			,
+		yearmonth				,
+		own_bus_count			,
+        oper_bus_count			,
+        std_bus_count			,
+        gas_bus_count			,
+        diesel_bus_count		,
+        cng_bus_count			,
+        ele_bus_count			,
+        mix_bus_count			,
+        other_bus_count			,
+        aircon_bus_count		,
+        non_aircon_bus_count	,
+        luxury_bus_count		,
+        advanced_bus_count		,
+        medium_bus_count		,
+        normal_bus_count		,
+        lowfloor_bus_count		,
+        non_lowfloor_bus_count	,
+        non_oper_bus_count		,
+        less_than_1year_count	,
+        oneto3year_count		,
+        threeto5year_count		,
+        fiveto7year_count		,
+        area_code 				,
+        org_group 				,
+        org_group_id	 		
+    )
+    select  
+		v_date																			business_date			,
+		to_char(business_date,'yyyymm') 												yearmonth				,
+		count(*)																		own_bus_count			,
+		sum(case when bus_operate_type = '运营车辆' then 1 else 0 end)					oper_bus_count			,
+		sum(stdcoefficient)																std_bus_count			,
+		sum(case when oil_type='汽油' then 1 else 0 end)								gas_bus_count			,
+		sum(case when oil_type='柴油' then 1 else 0 end)								diesel_bus_count		,
+		sum(case when oil_type like '%天然气%' then 1 else 0 end)						cng_bus_count			,
+		sum(case when oil_type like '电%' then 1 else 0 end)							ele_bus_count			,
+		sum(case when oil_type like '%/%' or oil_type like '%混合%' then 1 else 0 end) 	mix_bus_count			,
+		null 																			other_bus_count			,
+		sum(case when air_conditioned ='是' then 1 else 0 end)							aircon_bus_count		,
+		sum(case when air_conditioned ='否' then 1 else 0 end)							non_aircon_bus_count	,
+		null																			luxury_bus_count		,
+		null																			advanced_bus_count		,
+		null																			medium_bus_count		,
+		null																			normal_bus_count		,
+		sum(case when low_floor  ='是' then 1 else 0 end)								lowfloor_bus_count		,
+		sum(case when low_floor  ='否' then 1 else 0 end)								non_lowfloor_bus_count	,
+		sum(case when bus_operate_type <> '运营车辆' then 1 else 0 end)					non_oper_bus_count		,
+		null																			less_than_1year_count	,
+		null																			oneto3year_count		,
+		null																			threeto5year_count		,
+		null																			fiveto7year_count		,
+		area_code 																		area_code 				,
+		org_group 																		org_group 				,
+		org_group_id	 																org_group_id			 	
+	from rpt_busiquery_businfo a
+	where a.bus_status = '正常'
+	and a.business_date = v_date
+	group by to_char(business_date,'yyyymm'),area_code,org_group,org_group_id
+	;
+    commit;
+    
+	update rpt_infra_bus a
+	set other_bus_count = nvl(oper_bus_count,0)
+						+ nvl(non_oper_bus_count,0)
+						- nvl(gas_bus_count,0)
+						- nvl(diesel_bus_count,0)
+						- nvl(cng_bus_count,0)
+						- nvl(ele_bus_count,0)
+						- nvl(mix_bus_count,0)
+	where a.business_date = v_date;
+	commit;
+	
+	--***************************从业人员**********************
+    delete from rpt_infra_employee where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+	delete from rpt_infra_employee where business_date = v_date;
+	commit;
+	
+    insert /*+append*/ into rpt_infra_employee (
+		business_date			, 
+		yearmonth				,
+		emp_count				,
+		driver_count			,
+		steward_count			,
+		dispatcher_count		,
+		ticket_supervisor_count	,
+		clerk_count				,
+		section_chief_count		,
+		others_count			,
+		male_count				,
+		female_count			,
+		area_code				,
+		org_group				,
+		org_group_id			 
+	)	
+	select 
+		v_date														business_date			,
+	    to_char(business_date,'yyyymm') 							yearmonth				,
+	    count(*)													emp_count				,
+	    sum(case when position_type = '驾驶员' then 1 else 0 end) 	driver_count			,
+	    sum(case when position_type = '乘务员' then 1 else 0 end) 	steward_count			,
+	    sum(case when position_type = '调度员' then 1 else 0 end) 	dispatcher_count		,
+	    sum(case when position_type = '票务主管' then 1 else 0 end) ticket_supervisor_count	,
+	    sum(case when position_type = '科员' then 1 else 0 end) 	clerk_count				,
+	    sum(case when position_type = '科长' then 1 else 0 end) 	section_chief_count		,
+	    null 														others_count			,
+	    sum(case when sex = '男' then 1 else 0 end) 				male_count				,
+	    sum(case when sex = '女' then 1 else 0 end) 				female_count			,
+	    area_code													area_code				,
+	    org_group													org_group				,
+	    org_group_id												org_group_id			
+	from rpt_busiquery_emp a
+	where a.business_date = v_date
+	group by to_char(business_date,'yyyymm'),area_code,org_group,org_group_id
+	;
+    commit;	
+	
+	update rpt_infra_employee a
+	set others_count = nvl(emp_count,0)
+						- nvl(driver_count,0)
+						- nvl(steward_count,0)
+						- nvl(dispatcher_count,0)
+						- nvl(ticket_supervisor_count,0)
+						- nvl(clerk_count,0)
+						- nvl(section_chief_count,0)
+	where a.business_date = v_date;
+	commit;
+	
+	--***************************公交场站**********************
+    delete from rpt_infra_site where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+	delete from rpt_infra_site where business_date = v_date;
+	commit;
+	
+    insert /*+append*/ into rpt_infra_site (
+		business_date			, 
+		yearmonth				,
+		site_count		        ,
+		site_square		        ,
+		site_volume		        ,
+		demand_ablity	        ,
+		site_owned_count		,
+		site_rent_count			,
+		site_borrow_count		,
+		area_code		        ,
+		org_group 		        ,
+		org_group_id 	
+	)	
+	select 
+		v_date														business_date			,
+	    to_char(business_date,'yyyymm') 							yearmonth				,
+	    count(*)													site_count		        ,
+	    sum(site_square) 											site_square		        ,
+	    sum(site_volume) 											site_volume		        ,
+	    null													 	demand_ablity	        ,
+	    sum(case when site_from like '自有%' then 1 else 0 end) 	site_owned_count		,
+	    sum(case when site_from like '租用%' then 1 else 0 end) 	site_rent_count			,
+		sum(case when site_from like '借用%' then 1 else 0 end) 	site_rent_count			,
+	    area_code												 	area_code		        ,
+	    org_group													org_group 		        ,
+	    org_group_id								 				org_group_id		
+	from rpt_busiquery_site a
+	where a.business_date = v_date
+	group by to_char(business_date,'yyyymm'),area_code,org_group,org_group_id
+	;
+    commit;	
+	
+	
+	--***************************公交站点**********************
+    delete from rpt_infra_station where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+	delete from rpt_infra_station where business_date = v_date;
+	commit;
+	
+    insert /*+append*/ into rpt_infra_station (
+		business_date			, 
+		yearmonth				,
+		station_count			,
+		harbor_shaped_count		,
+		hange_station_count		,
+		shelter_count			,
+		electronic_board_count	,
+		area_code				,
+		org_group 				,
+		org_group_id 					
+	)	
+	select 
+		v_date														business_date			,
+	    to_char(business_date,'yyyymm') 							yearmonth				,
+	    count(*)													station_count			,
+	    sum(case when harbor_shaped='是' then 1 else 0 end)			harbor_shaped_count		,
+	    sum(case when hange_station='是' then 1 else 0 end)			hange_station_count		,
+	    sum(case when shelter='有' then 1 else 0 end)		 		shelter_count			,
+	    sum(case when electronic_board='有' then 1 else 0 end)		electronic_board_count	,
+	    area_code 													area_code				,
+		org_group 													org_group 				,
+	    org_group_id												org_group_id 										 				
+	from rpt_busiquery_station a
+	where a.business_date = v_date
+	group by to_char(business_date,'yyyymm'),area_code,org_group,org_group_id
+	;
+    commit;	
+
+end;
+
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_first_last_run                                                          		*
+*                                                                                               *
+*  File Name   : p_first_last_run.prc                                                      		*
+*                                                                                               *
+*  Description : 报表用首末班信息                                                               *
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 27-Nov-16   1.0      Liu Mingshun      Initial release                                        *
+************************************************************************************************/
+procedure p_first_last_run
+as
+	v_date 				date:= getbusinessdate;	
+	v_partition			varchar2(20);
+begin
+	v_partition := 'P_'||to_char(v_date,'yyyymm');
+
+    delete from rpt_first_last_run where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_first_last_run where business_date = v_date;
+	commit;
+		
+    execute immediate '
+	insert into rpt_first_last_run (
+		business_date		,
+		run_date			,
+		route_id		    ,
+		segment_id		    ,
+		first_last_flag	    ,
+		bus_id			    ,
+		actual_leavetime	,
+		actual_arrivetime	,
+		plan_leavetime		,
+		plan_arrivetime		,
+		leave_station		,
+		arrive_station		,
+		area_code			,
+		org_group 	        ,
+		org_group_id
+    )
+    select  
+		null       				business_date		,
+		rundatadate 			run_date			,
+		routeid					route_id			,
+	    segmentid				segment_id			,
+		''FIRST_RUN''			first_last_flag		,
+		busid					bus_id				,
+		actual_leavetime		actual_leavetime	,
+		actual_arrivetime		actual_arrivetime	,
+		displan_leavetime		plan_leavetime		,
+		displan_arrivetime		plan_arrivetime		,
+		startstationid			leave_station		,
+		endstationid			arrive_station		,
+		area_code				area_code			,
+		org_group				org_group 	        ,
+		org_group_id            org_group_id
+	from (	select a.rundatadate, a.routeid, a.segmentid, a.leavetime actual_leavetime, b.leavetime displan_leavetime,
+				a.arrivetime actual_arrivetime, b.arrivetime displan_arrivetime, a.busid,
+				c.orggroup org_group, c.orggroupid org_group_id, c.regional_category area_code, a.startstationid, a.endstationid,
+				row_number() over (partition by a.rundatadate, a.routeid, a.segmentid order by a.leavetime) num
+			from bz_busrunrecordld partition ('||v_partition||') a, bz_busdisplanld partition ('||v_partition||') b
+				,map_org_regional c 
+			where a.displanid = b.displandid
+			and a.orgid = c.orgid
+			and a.rectype = ''1''
+			and a.isactive = ''1''
+	)
+	where num = 1'
+	;
+    commit;
+	
+	execute immediate '
+	insert into rpt_first_last_run (
+		business_date		,
+		run_date			,
+		route_id		    ,
+		segment_id		    ,
+		first_last_flag	    ,
+		bus_id			    ,
+		actual_leavetime	,
+		actual_arrivetime	,
+		plan_leavetime		,
+		plan_arrivetime		,
+		leave_station		,
+		arrive_station		,
+		area_code			,
+		org_group 	        ,
+		org_group_id
+    )
+    select  
+		null       				business_date		,
+		rundatadate 			run_date			,
+		routeid					route_id			,
+	    segmentid				segment_id			,
+		''LAST_RUN''			first_last_flag		,
+		busid					bus_id				,
+		actual_leavetime		actual_leavetime	,
+		actual_arrivetime		actual_arrivetime	,
+		displan_leavetime		plan_leavetime		,
+		displan_arrivetime		plan_arrivetime		,
+		startstationid			leave_station		,
+		endstationid			arrive_station		,
+		area_code				area_code			,
+		org_group				org_group 	        ,
+		org_group_id            org_group_id
+	from (	select a.rundatadate, a.routeid, a.segmentid, a.leavetime actual_leavetime, b.leavetime displan_leavetime,
+				a.arrivetime actual_arrivetime, b.arrivetime displan_arrivetime, a.busid,
+				c.orggroup org_group, c.orggroupid org_group_id, c.regional_category area_code, a.startstationid, a.endstationid,
+				row_number() over (partition by a.rundatadate, a.routeid, a.segmentid order by a.leavetime desc) num
+			from bz_busrunrecordld partition ('||v_partition||') a, bz_busdisplanld partition ('||v_partition||') b
+				,map_org_regional c 
+			where a.displanid = b.displandid
+			and a.orgid = c.orgid
+			and a.rectype = ''1''
+			and a.isactive = ''1''
+	)
+	where num = 1'
+	;
+    commit;
+	
+	update rpt_first_last_run set business_date = v_date where business_date is null;
+	commit;
+	
+	update rpt_first_last_run a
+	set bus_self_id = (select b.bus_self_id
+					   from rpt_busiquery_businfo b
+					   where a.bus_id = b.bus_id
+					   and a.business_date = b.business_date)
+	where business_date = v_date;
+	commit;
+	
+	update rpt_first_last_run a
+	set route_style = (select b.route_style
+					   from rpt_busiquery_route b
+					   where a.route_id = b.route_id
+					   and a.business_date = b.business_date)
+	where business_date = v_date;
+	commit;
+
+end;
+
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_monitor_info                                                            		*
+*                                                                                               *
+*  File Name   : p_monitor_info.prc                                                        		*
+*                                                                                               *
+*  Description : p_monitor_info                                                            		*
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 11-Nov-16   1.0      Liu Mingshun      Initial release                                         *
+************************************************************************************************/
+procedure p_monitor_info
+as
+	v_date				date:=getbusinessdate;
+	v_partition			varchar2(20);
+begin
+	v_partition := 'P_'||to_char(v_date,'yyyymm');
+	
+	--***************************早高峰车辆数统计**********************
+    delete from rpt_monitor_ampmpeak where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_monitor_ampmpeak where business_date = v_date;
+	commit;
+	
+    execute immediate '
+	insert into rpt_monitor_ampmpeak (
+		business_date			,
+		oper_date				,
+		oper_time_section		, 
+		owned_count		        , 
+        online_count	        , 
+        oper_count		        , 
+        non_oper_count	        , 
+        area_code		        , 
+        org_group 		        , 
+        org_group_id 	          
+    )
+    select  
+		null					business_date			,
+		a.rundatadate			oper_date				,
+		''07:10-07:40''			oper_time_section		,
+		null 					owned_count		        ,
+		count(distinct busid) 	online_count	        ,
+		null 					oper_count		        ,
+		null 					non_oper_count	        ,
+		b.regional_category     area_code				,
+		b.orggroup				org_group				,
+		b.orggroupid			org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and ((to_char(a.leavetime, ''hh24:mi:ss'') <= ''07:10:00'' and to_char(a.arrivetime, ''hh24:mi:ss'') > ''07:10:00'')
+	 or to_char(a.leavetime, ''hh24:mi:ss'') between ''07:10:01'' and ''07:40:00'')
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid
+	union all
+	select  
+		null					business_date			,
+		a.rundatadate			oper_date				,
+		''07:40-08:10''			oper_time_section		,
+		null 					owned_count		        ,
+		count(distinct busid) 	online_count	        ,
+		null 					oper_count		        ,
+		null 					non_oper_count	        ,
+		b.regional_category     area_code				,
+		b.orggroup				org_group				,
+		b.orggroupid			org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and ((to_char(a.leavetime, ''hh24:mi:ss'') <= ''07:40:00'' and to_char(a.arrivetime, ''hh24:mi:ss'') > ''07:40:00'')
+	 or to_char(a.leavetime, ''hh24:mi:ss'') between ''07:40:01'' and ''08:10:00'')
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid
+	union all
+	select  
+		null					business_date			,
+		a.rundatadate			oper_date				,
+		''08:10-08:40''			oper_time_section		,
+		null 					owned_count		        ,
+		count(distinct busid) 	online_count	        ,
+		null 					oper_count		        ,
+		null 					non_oper_count	        ,
+		b.regional_category     area_code				,
+		b.orggroup				org_group				,
+		b.orggroupid			org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and ((to_char(a.leavetime, ''hh24:mi:ss'') <= ''08:10:00'' and to_char(a.arrivetime, ''hh24:mi:ss'') > ''08:10:00'')
+	 or to_char(a.leavetime, ''hh24:mi:ss'') between ''08:10:01'' and ''08:40:00'')
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid
+	union all
+	select  
+		null					business_date			,
+		a.rundatadate			oper_date				,
+		''08:40-09:10''			oper_time_section		,
+		null 					owned_count		        ,
+		count(distinct busid) 	online_count	        ,
+		null 					oper_count		        ,
+		null 					non_oper_count	        ,
+		b.regional_category     area_code				,
+		b.orggroup				org_group				,
+		b.orggroupid			org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and ((to_char(a.leavetime, ''hh24:mi:ss'') <= ''08:40:00'' and to_char(a.arrivetime, ''hh24:mi:ss'') > ''08:40:00'')
+	 or to_char(a.leavetime, ''hh24:mi:ss'') between ''08:40:01'' and ''09:10:00'')
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid'
+	;
+	commit;
+	
+	update rpt_monitor_ampmpeak
+	set business_date = v_date
+	where business_date is null;
+	commit;
+	
+	update rpt_monitor_ampmpeak rpt
+	set (owned_count, oper_count, non_oper_count) = 
+		(select a.own_bus_count, a.oper_bus_count, a.own_bus_count - a.oper_bus_count
+		 from rpt_infra_bus a
+		 where rpt.area_code = a.area_code
+		 and rpt.org_group_id = a.org_group_id
+		 and a.business_date = rpt.business_date
+		)
+	where business_date = v_date;
+	commit;
+	
+	--***************************固定时段车辆在线数量**********************
+    delete from rpt_monitor_fixtimeonline where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+	delete from rpt_monitor_fixtimeonline where business_date = v_date;
+	commit;
+	
+    execute immediate '
+	insert into rpt_monitor_fixtimeonline (
+		business_date			, 
+		oper_date				,
+		fixed_time_section		,
+		weekday					,
+		gps_online_count		,
+		oper_online_count		,
+		non_oper_online_count	,
+		area_code				,
+		org_group 				,
+		org_group_id 			
+	)	
+	select 
+		null								business_date			,
+	    a.rundatadate 						oper_date,
+		d.code_value						fixed_time_section,
+        to_char(a.rundatadate-1,''D'') 		weekday					,
+        sum(case when c.bus_machine_number is not null 
+				 then 1
+				 else 0
+			end) 							gps_online_count		,
+        sum(case when c.bus_operate_type =''运营车辆''
+				 then 1
+				 else 0
+			end) 							oper_online_count		,
+        sum(case when c.bus_operate_type <>''运营车辆''
+				 then 1
+				 else 0
+			end)  							non_oper_online_count	,
+        b.regional_category     			area_code				,
+		b.orggroup							org_group				,
+		b.orggroupid						org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b, rpt_busiquery_businfo c, map_code_master d
+	where a.orgid = b.orgid
+	and a.busid = c.bus_id
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and d.code_category = ''RPT_MONITOR_FIXTIMEONLINE''
+	and a.leavetime <= to_date(to_char(a.leavetime,''yyyymmdd'')||'' ''||d.code_value,''yyyymmdd hh24:mi:ss'')
+	and a.arrivetime > to_date(to_char(a.leavetime,''yyyymmdd'')||'' ''||d.code_value,''yyyymmdd hh24:mi:ss'')
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid, d.code_value'
+	;
+	commit;	
+	
+	update rpt_monitor_fixtimeonline
+	set business_date = v_date
+	where business_date is null;
+	commit;
+	
+	--***************************GIS监控**********************
+    delete from rpt_monitor_gis where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+	delete from rpt_monitor_gis where business_date = v_date;
+	commit;
+	
+    insert /*+append*/ into rpt_monitor_gis (
+		business_date			, 
+		gis_datetime			,
+		oper_online_count		,
+		non_oper_online_count	,
+		online_count			,
+		area_code				,
+		org_group 				,
+		org_group_id			
+	)	
+	select 
+		v_date				business_date			,
+	    null				gis_datetime			,--IS '日期时间';
+        null				oper_online_count		,--IS '运营车辆在线数';
+        null				non_oper_online_count	,--IS '非运营车辆在线数';
+        null				online_count			,--IS '车辆在线总数';
+        null				area_code				,--IS '区域类型';
+        null				org_group 				,--IS '区域名称';
+        null				org_group_id			 --IS '区域ID';
+	from dual;
+    commit;	
+	
+	--***************************GIS在线数历史查询**********************
+    delete from rpt_monitor_onlinedata where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+	delete from rpt_monitor_onlinedata where business_date = v_date;
+	commit;
+	
+    insert /*+append*/ into rpt_monitor_onlinedata (
+		business_date				, 
+		oper_datetime				,
+		operating_bus_count			,
+		non_operating_bus_count		,
+		all_bus_count				,
+		operating_bus_online_rate	,
+		area_code					,
+		org_group 					,
+		org_group_id				
+	)	
+	select 
+		v_date			business_date				,
+	    null 			oper_datetime				,--IS '时间范围';
+	    null 			operating_bus_count			,--IS '运营车辆在线数';
+	    null 			non_operating_bus_count		,--IS '非运营车辆在线数';
+	    null 			all_bus_count				,--IS '总车辆在线数';
+	    null 			operating_bus_online_rate	,--IS '车辆利用率';
+	    null 			area_code					,--IS '区域类型';
+	    null 			org_group 					,--IS '区域名称';
+		null 			org_group_id				 --IS '区域ID';			 				
+	from dual;
+    commit;	
+ 	
+end;
+
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_netoper_avgdistance                                                  		*
+*                                                                                               *
+*  File Name   : p_netoper_avgdistance.prc                                              		*
+*                                                                                               *
+*  Description : 线网分析 - 平均站距分析                                                        *
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 27-Oct-16   1.0      Liu Mingshun      Initial release                                        *
+************************************************************************************************/
+procedure p_netoper_avgdistance
+as
+	v_date 				date:= getbusinessdate;	
+	v_partition			varchar2(20);
+begin
+
+	v_partition := 'P_'||to_char(v_date,'yyyymm');
+	
+    delete from rpt_netoper_avgdistance where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_netoper_avgdistance where business_date = v_date;
+	commit;
+	
+    insert into rpt_netoper_avgdistance (
+		business_date		,
+		yearmonth			,
+        route_id			,
+        route_name			,
+        avg_station_distance,
+        area_code			,
+        org_group_id		,
+        org_group			
+	)
+    select  
+		v_date     							business_date		,
+		to_char(v_date, 'yyyymm')			yearmonth			,
+		a.route_id							route_id			,
+		b.route_name						route_name			,
+		round(b.route_length/(count(a.station_no)-1)*1000,0)	avg_station_distance,
+		b.area_code							area_code			,
+		b.org_group_id       				org_group_id		,
+		b.org_group							org_group			
+	from rpt_busiquery_route_tjzd a, rpt_busiquery_route b
+	where a.business_date = v_date
+	and a.business_date = b.business_date
+	and a.route_id = b.route_id
+	and a.run_direction in ('3','1')
+	group by a.route_id, b.route_name, b.route_length, b.area_code, b.org_group_id, b.org_group
+	;
+    commit;
+
+end;
+
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_svcquality_depcls                                                            *
+*                                                                                               *
+*  File Name   : p_svcquality_depcls.prc                                                        *
+*                                                                                               *
+*  Description : 服务质量 -  发车收车时间分析                                                   *
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 27-Oct-16   1.0      Liu Mingshun      Initial release                                        *
+************************************************************************************************/
+procedure p_svcquality_depcls
+as
+	v_date 				date:= getbusinessdate;	
+	v_partition			varchar2(20);
+	v_standard			number;
+begin
+
+	v_partition := 'P_'||to_char(v_date,'yyyymm');
+	
+	select code_value into v_standard
+	from map_code_master
+	where code_category ='ONTIME_STANDARD';
+	
+    delete from rpt_svcquality_depcls where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_svcquality_depcls where business_date = v_date;
+	commit;
+	
+    dbms_output.put_line('insert into table for 服务质量-收车发车时间分析');
+    execute immediate '
+	insert into rpt_svcquality_depcls (
+		business_date		,
+		run_date			,
+		depcls_type			,
+		start_time	        ,
+		end_time	        ,
+		route_count			,
+		area_code	        ,
+		org_group			,
+		org_group_id
+    )
+    select  
+		null       							business_date		,
+		a.rundatadate 						run_date			,
+		''DEPARTURE''						depcls_type			,
+		''00:00''							start_time			,
+		''06:00''							end_date			,
+		count(a.routeid)					dep_route_count		,
+		b.regional_category        			area_code			,
+		b.orggroup							org_group			,
+		b.orggroupid						org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and to_char(a.leavetime, ''hh24:mi:ss'') between ''00:00:01'' and ''06:00:00''
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid
+	union all
+	    select  
+		null       							business_date		,
+		a.rundatadate 						run_date			,
+		''DEPARTURE''						depcls_type			,
+		''06:00''							start_time			,
+		''06:30''							end_date			,
+		count(a.routeid)					dep_route_count		,
+		b.regional_category        			area_code			,
+		b.orggroup							org_group			,
+		b.orggroupid						org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and to_char(a.leavetime, ''hh24:mi:ss'') between ''06:00:01'' and ''06:30:00''
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid
+	union all
+	    select  
+		null       							business_date		,
+		a.rundatadate 						run_date			,
+		''DEPARTURE''						depcls_type			,
+		''06:30''							start_time			,
+		''07:00''							end_date			,
+		count(a.routeid)					dep_route_count		,
+		b.regional_category        			area_code			,
+		b.orggroup							org_group			,
+		b.orggroupid						org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and to_char(a.leavetime, ''hh24:mi:ss'') between ''06:30:01'' and ''07:00:00''
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid
+	union all
+	    select  
+		null       							business_date		,
+		a.rundatadate 						run_date			,
+		''DEPARTURE''						depcls_type			,
+		''07:00''							start_time			,
+		''07:30''							end_date			,
+		count(a.routeid)					dep_route_count		,
+		b.regional_category        			area_code			,
+		b.orggroup							org_group			,
+		b.orggroupid						org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and to_char(a.leavetime, ''hh24:mi:ss'') between ''07:00:01'' and ''07:30:00''
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid
+	union all
+	    select  
+		null       							business_date		,
+		a.rundatadate 						run_date			,
+		''DEPARTURE''						depcls_type			,
+		''07:30''							start_time			,
+		''08:00''							end_date			,
+		count(a.routeid)					dep_route_count		,
+		b.regional_category        			area_code			,
+		b.orggroup							org_group			,
+		b.orggroupid						org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and to_char(a.leavetime, ''hh24:mi:ss'') between ''07:30:01'' and ''08:00:00''
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid
+	union all
+	    select  
+		null       							business_date		,
+		a.rundatadate 						run_date			,
+		''DEPARTURE''						depcls_type			,
+		''08:00''							start_time			,
+		''08:30''							end_date			,
+		count(a.routeid)					dep_route_count		,
+		b.regional_category        			area_code			,
+		b.orggroup							org_group			,
+		b.orggroupid						org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and to_char(a.leavetime, ''hh24:mi:ss'') between ''08:00:01'' and ''08:30:00''
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid
+	union all
+	    select  
+		null       							business_date		,
+		a.rundatadate 						run_date			,
+		''DEPARTURE''						depcls_type			,
+		''08:30''							start_time			,
+		''09:00''							end_date			,
+		count(a.routeid)					dep_route_count		,
+		b.regional_category        			area_code			,
+		b.orggroup							org_group			,
+		b.orggroupid						org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and to_char(a.leavetime, ''hh24:mi:ss'') between ''08:30:01'' and ''09:00:00''
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid
+	union all
+	    select  
+		null       							business_date		,
+		a.rundatadate 						run_date			,
+		''CLOSE''							depcls_type			,
+		''16:30''							start_time			,
+		''19:00''							end_date			,
+		count(a.routeid)					dep_route_count		,
+		b.regional_category        			area_code			,
+		b.orggroup							org_group			,
+		b.orggroupid						org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and to_char(a.leavetime, ''hh24:mi:ss'') between ''16:30:01'' and ''19:00:00''
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid
+	union all
+	    select  
+		null       							business_date		,
+		a.rundatadate 						run_date			,
+		''CLOSE''							depcls_type			,
+		''19:00''							start_time			,
+		''20:00''							end_date			,
+		count(a.routeid)					dep_route_count		,
+		b.regional_category        			area_code			,
+		b.orggroup							org_group			,
+		b.orggroupid						org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and to_char(a.leavetime, ''hh24:mi:ss'') between ''19:00:01'' and ''20:00:00''
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid
+	union all
+	    select  
+		null       							business_date		,
+		a.rundatadate 						run_date			,
+		''CLOSE''							depcls_type			,
+		''20:00''							start_time			,
+		''21:00''							end_date			,
+		count(a.routeid)					dep_route_count		,
+		b.regional_category        			area_code			,
+		b.orggroup							org_group			,
+		b.orggroupid						org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and to_char(a.leavetime, ''hh24:mi:ss'') between ''20:00:01'' and ''21:00:00''
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid
+	union all
+	    select  
+		null       							business_date		,
+		a.rundatadate 						run_date			,
+		''CLOSE''							depcls_type			,
+		''21:00''							start_time			,
+		''21:30''							end_date			,
+		count(a.routeid)					dep_route_count		,
+		b.regional_category        			area_code			,
+		b.orggroup							org_group			,
+		b.orggroupid						org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and to_char(a.leavetime, ''hh24:mi:ss'') between ''21:00:01'' and ''21:30:00''
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid
+	union all
+	    select  
+		null       							business_date		,
+		a.rundatadate 						run_date			,
+		''CLOSE''							depcls_type			,
+		''21:30''							start_time			,
+		''22:00''							end_date			,
+		count(a.routeid)					dep_route_count		,
+		b.regional_category        			area_code			,
+		b.orggroup							org_group			,
+		b.orggroupid						org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and to_char(a.leavetime, ''hh24:mi:ss'') between ''21:30:01'' and ''22:00:00''
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid
+	union all
+	    select  
+		null       							business_date		,
+		a.rundatadate 						run_date			,
+		''CLOSE''							depcls_type			,
+		''22:00''							start_time			,
+		''22:30''							end_date			,
+		count(a.routeid)					dep_route_count		,
+		b.regional_category        			area_code			,
+		b.orggroup							org_group			,
+		b.orggroupid						org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and to_char(a.leavetime, ''hh24:mi:ss'') between ''22:00:01'' and ''22:30:00''
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid
+	union all
+	    select  
+		null       							business_date		,
+		a.rundatadate 						run_date			,
+		''CLOSE''							depcls_type			,
+		''22:30''							start_time			,
+		''23:00''							end_date			,
+		count(a.routeid)					dep_route_count		,
+		b.regional_category        			area_code			,
+		b.orggroup							org_group			,
+		b.orggroupid						org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and to_char(a.leavetime, ''hh24:mi:ss'') between ''22:30:01'' and ''23:00:00''
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid
+	union all
+	    select  
+		null       							business_date		,
+		a.rundatadate 						run_date			,
+		''CLOSE''							depcls_type			,
+		''23:00''							start_time			,
+		''24:00''							end_date			,
+		count(a.routeid)					dep_route_count		,
+		b.regional_category        			area_code			,
+		b.orggroup							org_group			,
+		b.orggroupid						org_group_id
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b
+	where a.orgid = b.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and to_char(a.leavetime, ''hh24:mi:ss'') between ''23:00:01'' and ''24:00:00''
+	group by a.rundatadate, b.regional_category, b.orggroup, b.orggroupid'
+	;
+    commit;
+	
+	update rpt_svcquality_depcls set business_date = v_date where business_date is null;
+	commit;
+
+end;
+
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_svcquality_depinterval                                                       *
+*                                                                                               *
+*  File Name   : p_svcquality_depinterval.prc                                                   *
+*                                                                                               *
+*  Description : 服务质量 -  最大发车间隔保障（5:30~21:00）                                     *
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 27-Oct-16   1.0      Liu Mingshun      Initial release                                        *
+************************************************************************************************/
+procedure p_svcquality_depinterval
+as
+	v_date 				date:= getbusinessdate;	
+	v_partition			varchar2(20);
+	v_date_immediate	varchar2(20);
+begin
+
+	v_partition := 'P_'||to_char(v_date,'yyyymm');
+	v_date_immediate := to_char(v_date,'yyyymmdd');
+	
+    delete from rpt_svcquality_depinterval where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_svcquality_depinterval where business_date = v_date;
+	commit;
+	
+    execute immediate '
+	insert into rpt_svcquality_depinterval (
+		business_date		,
+		run_date			,
+		route_id			,
+		route_grade			,
+		dep_interval_failed	,
+		pass_flag			,
+		area_code			,
+		org_group			,
+		org_group_id		
+    )
+    select  
+		null       							business_date			,
+		m.rundatadate 						run_date				,
+		m.routeid							route_id				,
+		m.route_grade						route_grade				,
+		sum(case when m.route_grade = ''快线'' and (m.leavetime - m.pre_leavetime)*24*60>9 then 1
+			 when m.route_grade = ''干线'' and (m.leavetime - m.pre_leavetime)*24*60>12 then 1
+			 when m.route_grade = ''支线'' and (m.leavetime - m.pre_leavetime)*24*60>15 then 1
+			 when m.route_grade = ''微线'' and (m.leavetime - m.pre_leavetime)*24*60>8 then 1
+			 else 0
+		end) 								dep_interval_failed		,
+		null								pass_flag				,
+		m.regional_category        			area_code				,
+		m.orggroup							org_group				,
+		m.orggroupid						org_group_id
+	from (	
+	select a.rundatadate, a.routeid, a.segmentid, a.leavetime, b.regional_category, b.orggroup, b.orggroupid, c.route_grade,
+		lag(a.leavetime,1,a.leavetime) over (partition by a.rundatadate, a.routeid, a.segmentid order by a.leavetime) pre_leavetime
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional b, rpt_busiquery_route c
+	where a.orgid = b.orgid
+	and a.routeid = c.route_id
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and to_char(c.business_date,''yyyymmdd'') = '||v_date_immediate||'
+	and to_char(a.leavetime, ''hh24:mi:ss'') between ''05:30:00'' and ''21:00:00''
+	) m
+	group by m.rundatadate, m.routeid, m.route_grade, m.regional_category, m.orggroup, m.orggroupid'
+	;
+    commit;
+	
+	update rpt_svcquality_depinterval set business_date = v_date where business_date is null;
+	commit;
+
+	update rpt_svcquality_depinterval 
+	set pass_flag = (case when dep_interval_failed >= 2 then 'N' else 'Y' end);
+	commit;
+	
+	update rpt_svcquality_depinterval 
+	set working_day_flag = (case when to_char(run_date,'D') in (1,7) then 'H' else 'W' end);
+	commit;	
+
+end;
+
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_svcquality_flontime                                                          *
+*                                                                                               *
+*  File Name   : p_svcquality_flontime.prc                                                      *
+*                                                                                               *
+*  Description : 服务质量                                                                       *
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 24-Oct-16   1.0      Liu Mingshun      Initial release                                        *
+************************************************************************************************/
+procedure p_svcquality_flontime
+as
+	v_date 				date:= getbusinessdate;	
+	v_partition			varchar2(20);
+	v_standard			number;
+begin
+
+	v_partition := 'P_'||to_char(v_date,'yyyymm');
+	
+	select code_value into v_standard
+	from map_code_master
+	where code_category ='ONTIME_STANDARD';
+	
+    delete from rpt_svcquality_flontime where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_svcquality_flontime where business_date = v_date;
+	commit;
+		
+    insert into rpt_svcquality_flontime (
+		business_date		,
+		fl_date				,
+		flag				,
+		first_run_count		,
+		frun_ontime_count	,
+		frun_ontime_ratio	,
+		area_code			,
+		org_group			,
+		org_group_id
+    )
+    select  
+		v_date     							business_date		,
+		run_date	 						fl_date				,
+		'TMP_F'								flag				,
+	    count(*)							first_run_count		,
+		sum(case when actual_leavetime < plan_leavetime or (actual_leavetime-plan_leavetime)*24*60<v_standard	
+			 then 1 else 0 
+		end) 								frun_ontime_count	,
+		null								frun_ontime_ratio	,
+		area_code	  			       		area_code			,
+		org_group							org_group			,
+		org_group_id						org_group_id
+	from rpt_first_last_run
+	where first_last_flag = 'FIRST_RUN'
+	and business_date = v_date
+	group by run_date, org_group_id, org_group, area_code
+	;
+    commit;
+		
+    insert into rpt_svcquality_flontime (
+		business_date		,
+		fl_date				,
+		flag				,
+		last_run_count		,
+		lrun_ontime_count	,
+		lrun_ontime_ratio	,
+		area_code			,
+		org_group			,
+		org_group_id
+    )
+    select  
+		v_date     							business_date		,
+		run_date	 						fl_date				,
+		'TMP_L'								flag				,
+		count(*)							last_run_count		,
+		sum(case when actual_leavetime > plan_leavetime or (plan_leavetime-actual_leavetime)*24*60<v_standard
+			 then 1 else 0 
+		end) 								lrun_ontime_count	,
+		null								lrun_ontime_ratio	,
+		area_code	  			       		area_code			,
+		org_group							org_group			,
+		org_group_id						org_group_id
+	from rpt_first_last_run
+	where first_last_flag = 'LAST_RUN'
+	and business_date = v_date
+	group by run_date, org_group_id, org_group, area_code
+	;
+    commit;
+
+	insert into rpt_svcquality_flontime(
+		business_date		,
+		fl_date				,
+		flag				,
+		first_run_count		,
+		frun_ontime_count	,
+		frun_ontime_ratio	,
+		last_run_count		,
+		lrun_ontime_count	,
+		lrun_ontime_ratio	,
+		area_code			,
+		org_group			,
+		org_group_id
+	)
+	select 
+		a.business_date			business_date		,
+	    a.fl_date				fl_date				,
+	    'RPT'					flag				,
+	    a.first_run_count		first_run_count		,
+	    a.frun_ontime_count		frun_ontime_count	,
+	    a.frun_ontime_ratio		frun_ontime_ratio	,
+	    b.last_run_count		last_run_count		,
+	    b.lrun_ontime_count		lrun_ontime_count	,
+	    b.lrun_ontime_ratio		lrun_ontime_ratio	,
+	    a.area_code				area_code			,
+	    a.org_group				org_group			,
+	    a.org_group_id	        org_group_id
+	from rpt_svcquality_flontime a, rpt_svcquality_flontime b
+	where a.business_date = b.business_date
+	and a.fl_date = b.fl_date
+	and a.flag = 'TMP_F'
+	and b.flag = 'TMP_L'
+	and a.org_group_id = b.org_group_id
+	and a.business_date = v_date;
+	commit;
+	
+	delete from rpt_svcquality_flontime where business_date = v_date and flag like 'TMP%';
+	commit;
+
+    update rpt_svcquality_flontime rpt
+        set route_grade = (	select c.route_grade
+							from rpt_busiquery_route c
+							where rpt.route_grade = c.route_id
+							and c.business_date = rpt.business_date
+						)
+    where rpt.business_date = v_date;
+    commit;
+
+    update rpt_svcquality_flontime rpt
+        set (frun_ontime_ratio,lrun_ontime_ratio) 
+			= ( select round(frun_ontime_count/decode(first_run_count,0,1,first_run_count)*100,2), 
+					   round(lrun_ontime_count/decode(last_run_count,0,1,last_run_count)*100,2)
+				from dual
+				)
+	where rpt.business_date = v_date;
+    commit;
+
+end;
+
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_svcquality_clsrationality                                                    *
+*                                                                                               *
+*  File Name   : p_svcquality_clsrationality.prc                                                *
+*                                                                                               *
+*  Description : 服务质量 -  收车时间合理性分析                                                 *
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 25-Nov-16   1.0      Liu Mingshun      Initial release                                        *
+************************************************************************************************/
+procedure p_svcquality_clsrationality
+as
+	v_date 				date:= getbusinessdate;	
+	v_partition			varchar2(20);
+begin
+
+	v_partition := 'P_'||to_char(v_date,'yyyymm');
+
+    delete from rpt_svcquality_clsrationality where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_svcquality_clsrationality where business_date = v_date;
+	commit;
+	
+	insert into rpt_svcquality_clsrationality (
+		business_date			,
+		run_date				,
+		route_id				,
+		route_length			,
+		card_consume_avg_count	,
+		area_code				,
+		org_group				,
+		org_group_id			
+    )
+    select 
+		v_date				business_date			,
+		b.run_date 			run_date				, 
+		a.lineno			route_id				,
+		null				route_length			,
+		sum(case when b.route_style = '2' then 1
+				 else 1/2
+			end) 			card_consume_avg_count	,
+		b.area_code			area_code,
+		b.org_group         org_group, 
+		b.org_group_id      org_group_id
+	from v_tbmonth_temp a, rpt_first_last_run b 
+	where a.busno = b.bus_self_id
+	and a.lineno = b.route_id
+	and a.consumedate >= b.actual_leavetime
+	and a.consumedate <= b.actual_arrivetime
+	and b.first_last_flag = 'LAST_RUN'
+	and b.business_date = v_date
+	group by b.run_date, a.lineno, b.org_group_id, b.org_group, b.area_code
+	;
+    commit;
+	
+	update rpt_svcquality_clsrationality a
+	set route_length = (select b.route_length
+						from rpt_busiquery_route b
+						where a.route_id = b.route_id
+						and a.business_date = b.business_date
+						)
+	where a.business_date = v_date;
+	commit;
+	
+	update rpt_svcquality_clsrationality a
+	set rationality = (case when route_length <= 10 and card_consume_avg_count>20 then 'N'
+							when route_length > 10 and route_length<=15 and card_consume_avg_count>25 then 'N'
+							when route_length > 15 and route_length<=20 and card_consume_avg_count>35 then 'N'
+							when route_length > 20 and card_consume_avg_count>40 then 'N'
+							else 'Y'
+						end)
+	where a.business_date = v_date;
+	commit;
+
+end;
+
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_splysecu_info                                                            	*
+*                                                                                               *
+*  File Name   : p_splysecu_info.prc                                                        	*
+*                                                                                               *
+*  Description : 供应保障		                                                            	*
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 11-Nov-16   1.0      Liu Mingshun      Initial release                                        *
+************************************************************************************************/
+procedure p_splysecu_info
+as
+	v_date				date:=getbusinessdate;
+	v_partition			varchar2(20);
+	v_date_immediate 	varchar2(20);
+begin
+	v_partition := 'P_'||to_char(v_date,'yyyymm');
+	v_date_immediate := to_char(v_date,'yyyymmdd');
+
+	--***************************报表用投币和收入信息**********************
+    delete from rpt_splysecu_flowandincome where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_splysecu_flowandincome where business_date = v_date;
+	commit;
+	
+    dbms_output.put_line('insert into table for 刷卡电子钱包');
+    insert /*+append*/ into rpt_splysecu_flowandincome (
+		business_date				,
+		oper_date					,
+		shuaka_cika_count			,
+		shuaka_cika_amt				,
+		shuaka_cika_youhui_count	,
+		shuaka_cika_youhui_amt		,
+		shuaka_dianziqianbao_count	,
+		shuaka_dianziqianbao_amt	,
+		shuaka_dzqb_youhui_count	,
+		shuaka_dzqb_youhui_amt		,
+		toubi_count					,
+		toubi_amount				,
+		area_code		          	,
+		org_group		          	,
+		org_group_id
+    )
+    select  
+		v_date						business_date				,
+		trunc(a.riqi) 				oper_date					,
+		null						shuaka_cika_count			,
+		null						shuaka_cika_amt				,
+		null						shuaka_cika_youhui_count	,
+		null						shuaka_cika_youhui_amt		,
+		sum(a.dianziqianbaorenci)	shuaka_dianziqianbao_count	,
+		sum(a.dianziqianbao)		shuaka_dianziqianbao_amt	,
+		sum(a.dianziqianbaorenci)	shuaka_dzqb_youhui_count	,
+		sum(a.dianziqianbaorenci*2-a.dianziqianbao) shuaka_dzqb_youhui_amt,
+		null						toubi_count					,
+		null						toubi_amount				,
+		c.area_code 				area_code					,
+		c.org_group 				org_group					,
+		c.org_group_id	 			org_group_id	
+	from as_sc_icincome a, rpt_busiquery_businfo c
+	where a.chehao = c.bus_self_id
+	and a.riqi >= trunc(v_date,'mm')
+	and a.riqi <= trunc(add_months(v_date,1),'mm')-1
+	and c.business_date = v_date
+	group by trunc(a.riqi), c.area_code, c.org_group, c.org_group_id
+	;
+	commit;
+	
+	dbms_output.put_line('update 客运能力-刷卡次卡');
+	update rpt_splysecu_flowandincome a
+	set (shuaka_cika_count,
+		 shuaka_cika_amt,
+		 shuaka_cika_youhui_count,
+		 shuaka_cika_youhui_amt
+		 ) = 
+				(select count(b.cardno), 
+						sum(b.consume/2), 
+						count(b.cardno), 					--刷卡次数等于优惠人次
+						count(b.cardno)*2-sum(b.consume/2)	--次卡优惠金额等于人次收入减实际收入
+				 from v_tbmonth_temp b, rpt_busiquery_businfo c
+				 where  a.oper_date = trunc(b.consumedate)
+				 and b.busno = c.bus_self_id
+				 and c.org_group_id = a.org_group_id
+				 and c.business_date = a.business_date
+				 )
+	where business_date = v_date;
+	commit;
+	
+	dbms_output.put_line('update 客运能力-投币');
+	update rpt_splysecu_flowandincome a
+	set (toubi_count,toubi_amount) = 
+				(select sum(b.xianjin)/2, sum(b.xianjin)
+				 from as_sc_cashincome b, rpt_busiquery_businfo c
+				 where a.oper_date = trunc(b.riqi)
+				 and b.chehao = c.bus_self_id
+				 and c.org_group_id = a.org_group_id
+				 and a.business_date = c.business_date
+				 )
+	where business_date = v_date;
+	commit;
+	
+	--***************************线路投入**********************
+    delete from rpt_splysecu_routeinvest where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_splysecu_routeinvest where business_date = v_date;
+	commit;
+	
+    insert /*+append*/ into rpt_splysecu_routeinvest (
+		business_date			,
+		yearmonth				,
+		route_count		        ,
+		route_length	        ,
+		sys_coverage	        ,
+		area_code		        ,
+		org_group		        ,
+		org_group_id	
+    )
+    select  
+		v_date								business_date	,
+		to_char(business_date,'yyyymm') 	yearmonth		,
+		count(route_id)						route_count		,
+		sum(route_length)					route_length	,
+		1									sys_coverage	,
+		area_code 							area_code		,
+		org_group 							org_group		,
+		org_group_id	 					org_group_id	
+	from rpt_busiquery_route a
+	where business_date = v_date
+	group by to_char(business_date,'yyyymm'),area_code,org_group,org_group_id
+	;
+    commit;
+	
+	--***************************线网投入????**********************
+    delete from rpt_splysecu_netinvest where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+	delete from rpt_splysecu_netinvest where business_date = v_date;
+	commit;
+	
+    insert /*+append*/ into rpt_splysecu_netinvest (
+		business_date			, 
+		yearmonth				,
+		routenet_length		    ,
+		route_length		    ,
+		route_count			    ,
+		route_repeat_ratio	    ,
+		area_code			    ,
+		org_group			    ,
+		org_group_id		    ,
+		routenet_density	    ,
+		route_density		
+	)	
+	select 
+		v_date								business_date		,
+	    to_char(business_date,'yyyymm') 	yearmonth			,
+	    null								routenet_length		,
+	    null								route_length		,
+	    null								route_count			,
+	    null								route_repeat_ratio	,
+	    area_code							area_code			,
+	    org_group							org_group			,
+	    org_group_id						org_group_id		,
+	    null								routenet_density	,
+	    null								route_density			
+	from rpt_busiquery_route a
+	where a.business_date = v_date
+	group by to_char(business_date,'yyyymm'),area_code,org_group,org_group_id
+	;
+    commit;	
+	
+	--***************************运能投入**********************
+    delete from rpt_splysecu_capacity_invest where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+	delete from rpt_splysecu_capacity_invest where business_date = v_date;
+	commit;
+	
+    execute immediate '
+	insert into rpt_splysecu_capacity_invest (
+		business_date			, 
+		oper_date				,
+        dep_shift_count		    ,
+        oper_mileage		    ,
+        trans_capacity		    ,
+        trans_count_per_km	    ,
+        trans_count_per_bus	    ,
+        area_code			    ,
+        org_group			    ,
+        org_group_id		
+	)	
+	select 
+		null				business_date			,
+		a.rundatadate		oper_date				,
+		count(a.busrrid)	dep_shift_count		    ,
+		sum(decode(sign(a.gpsmile),1,a.gpsmile,a.milenum))		oper_mileage		    ,
+		null				trans_capacity		    ,
+		null				trans_count_per_km	    ,
+		null				trans_count_per_bus	    ,
+		c.regional_category	area_code			    ,
+		c.orggroup			org_group			    ,
+		c.orggroupid		org_group_id			 
+	from bz_busrunrecordld partition ('||v_partition||') a, map_org_regional c
+	where a.orgid = c.orgid
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	group by a.rundatadate, c.regional_category, c.orggroup, c.orggroupid'
+	;
+    commit;	
+	
+	update rpt_splysecu_capacity_invest set business_date = v_date where business_date is null;
+	commit;
+	
+	dbms_output.put_line('update 客运能力-刷卡投币人次');
+	update rpt_splysecu_capacity_invest a
+	set trans_capacity = 
+				(select b.shuaka_cika_count + b.shuaka_dianziqianbao_count + b.toubi_count
+				 from rpt_splysecu_flowandincome b
+				 where a.oper_date = b.oper_date
+				 and a.org_group_id = b.org_group_id
+				 and a.business_date = b.business_date
+				 )
+	where business_date = v_date;
+	commit;
+	
+	
+	dbms_output.put_line('update 客运能力-单位营运公里载客数');
+	update rpt_splysecu_capacity_invest a
+	set trans_count_per_km = round(decode(oper_mileage,0,0,trans_capacity/oper_mileage),2)
+	where business_date = v_date;
+	commit;
+	
+	
+	dbms_output.put_line('update 客运能力-日平均载客量');
+	update rpt_splysecu_capacity_invest a
+	set trans_count_per_bus = round(decode(dep_shift_count,0,0,trans_capacity/dep_shift_count),2)
+	where business_date = v_date;
+	commit;
+	
+	
+	--***************************车辆投入**********************
+    delete from rpt_splysecu_businvest where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+	delete from rpt_splysecu_businvest where business_date = v_date;
+	commit;
+	
+	execute immediate '
+    insert into rpt_splysecu_businvest(
+		business_date			, 
+		yearmonth				,
+        own_bus_count		    ,
+        std_bus_count		    ,
+        advanced_bus_count	    ,
+        aircon_bus_count	    ,
+        lowfloor_bus_count	    ,
+        gas_bus_count		    ,
+        diesel_bus_count	    ,
+        cng_bus_count		    ,
+        mix_bus_count		    ,
+        area_code			    ,
+        org_group			    ,
+        org_group_id		
+	)	
+	select 
+		null														business_date			,
+	    to_char(business_date,''yyyymm'') 							yearmonth				,			
+		count(*)													own_bus_count		    ,
+		sum(stdcoefficient)											std_bus_count		    ,
+		null														advanced_bus_count	    ,
+		sum(case when air_conditioned =''是'' then 1 else 0 end)	aircon_bus_count	    ,
+		sum(case when low_floor  =''是'' then 1 else 0 end)			lowfloor_bus_count	    ,
+		sum(case when oil_type=''汽油'' then 1 else 0 end)			gas_bus_count		    ,
+		sum(case when oil_type=''柴油'' then 1 else 0 end)			diesel_bus_count	    ,
+		sum(case when oil_type like ''%天然气%'' then 1 else 0 end)	cng_bus_count		    ,
+		sum(case when oil_type like ''%/%'' or oil_type like ''%混合%'' 
+				 then 1 else 0 end)									mix_bus_count		    ,
+		area_code 													area_code				,
+		org_group 													org_group 				,
+	    org_group_id												org_group_id 										 							 	
+	from rpt_busiquery_businfo a
+	where a.bus_status = ''正常''
+	and to_char(a.business_date,''yyyymmdd'') = '||v_date_immediate||'
+	and exists (select 1 from bz_busrunrecordld partition ('||v_partition||') b where a.bus_id = b.busid)
+	group by to_char(business_date,''yyyymm''),area_code,org_group,org_group_id'
+	;
+    commit;	
+	
+	update rpt_splysecu_businvest set business_date = v_date where business_date is null;
+	commit;
+	
+	--***************************车辆利用率**********************
+    delete from rpt_splysecu_busutilization where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+	delete from rpt_splysecu_busutilization where business_date = v_date;
+	commit;
+	
+ 	execute immediate '
+	insert into rpt_splysecu_busutilization (
+		business_date			, 
+		oper_date				,
+		oper_bus_count		    ,
+		own_bus_count		    ,
+		bus_utilization		    ,
+		area_code			    ,
+		org_group			    ,
+		org_group_id		
+	)	
+	select 
+		null														business_date			,
+	    b.rundatadate 												oper_date				,		
+		count(distinct b.busid)										oper_bus_count		    ,
+		null														own_bus_count		    ,
+		null														bus_utilization		    ,
+		a.area_code 												area_code				,
+		a.org_group 												org_group 				,
+	    a.org_group_id												org_group_id 										 							 	
+	from rpt_busiquery_businfo a, bz_busrunrecordld partition ('||v_partition||') b
+	where a.bus_status = ''正常''
+	and a.bus_id = b.busid
+	and to_char(a.business_date,''yyyymmdd'') = '||v_date_immediate||'
+	group by b.rundatadate,a.area_code,a.org_group,a.org_group_id'
+	;
+    commit;	
+
+	update rpt_splysecu_busutilization set business_date = v_date where business_date is null;
+	commit;
+	
+	update rpt_splysecu_busutilization rpt
+	set (own_bus_count, bus_utilization) 
+					= (select b.own_bus_count, decode(b.own_bus_count,null,0,round(rpt.oper_bus_count/b.own_bus_count,2))
+					   from rpt_infra_bus b
+					   where rpt.org_group_id = b.org_group_id
+					   and rpt.business_date = b.business_date
+					)
+	where rpt.business_date = v_date
+	;
+	commit;
+
+	
+	--***************************万人拥有公交标台数**********************
+    delete from rpt_splysecu_stdcoeffby10th where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+	delete from rpt_splysecu_stdcoeffby10th where business_date = v_date;
+	commit;
+	
+	insert into rpt_splysecu_stdcoeffby10th (
+		business_date			, 
+		query_year				,
+		population_type			,
+		std_count				,
+		population_number		,
+		std_count_by_10thousand	,
+		area_code				,
+		org_group				,
+		org_group_id			
+	)	
+	select 
+		v_date														business_date			,
+	    to_char(a.business_date,'yyyy')								query_year				,	
+		'常住人口'													population_type			,
+		a.std_bus_count												std_count				,
+		b.code_value												population_number		,
+		round(a.std_bus_count*10000/b.code_value,2)                 std_count_by_10thousand	,
+		a.area_code 												area_code				,
+		a.org_group 												org_group				,
+	    a.org_group_id												org_group_id									 							 	
+	from rpt_infra_bus a, map_code_master b
+	where a.business_date = v_date
+	and a.area_code = b.code_desc
+	and b.code_category = 'POPULATION'
+	;
+    commit;	
+
+	
+	--***************************客流与运力配置分析**********************
+    delete from rpt_splysecu_passflowtocap where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+	delete from rpt_splysecu_passflowtocap where business_date = v_date;
+	commit;
+	
+	execute immediate '
+	insert into rpt_splysecu_passflowtocap (
+		business_date			, 
+		oper_date				,
+        time_section	        ,
+        route_name		        ,
+        route_id		        ,
+        oper_cap		        ,
+        passenger_flow	        ,
+        ratio			        ,
+        area_code		        ,
+        org_group		        ,
+        org_group_id	
+	)	
+	select 
+		null					business_date			,
+	    a.rundatadate			oper_date				,
+		case when to_char(a.leavetime,''hh24:mi:ss'') < ''06:00:00'' 
+			 then ''00:00-06:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''06:00:00'' and ''07:00:00''
+			 then ''06:00-07:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''07:00:00'' and ''08:00:00''
+			 then ''07:00-08:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''08:00:00'' and ''09:00:00''
+			 then ''08:00-09:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''09:00:00'' and ''10:00:00''
+			 then ''09:00-10:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''10:00:00'' and ''11:00:00''
+			 then ''10:00-11:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''11:00:00'' and ''12:00:00''
+			 then ''11:00-12:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''12:00:00'' and ''13:00:00''
+			 then ''12:00-13:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''13:00:00'' and ''14:00:00''
+			 then ''13:00-14:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''14:00:00'' and ''15:00:00''
+			 then ''14:00-15:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''15:00:00'' and ''16:00:00''
+			 then ''15:00-16:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''16:00:00'' and ''17:00:00''
+			 then ''16:00-17:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''17:00:00'' and ''18:00:00''
+			 then ''17:00-18:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''18:00:00'' and ''19:00:00''
+			 then ''18:00-19:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''19:00:00'' and ''20:00:00''
+			 then ''19:00-20:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''20:00:00'' and ''21:00:00''
+			 then ''20:00-21:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''21:00:00'' and ''22:00:00''
+			 then ''21:00-22:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''22:00:00'' and ''23:00:00''
+			 then ''22:00-23:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''23:00:00'' and ''24:00:00''
+			 then ''23:00-24:00''
+			 else ''00:00-06:00''
+		end 					time_section	        ,
+		b.route_name			route_name		        ,
+		a.routeid				route_id		        ,
+		count(*)                oper_cap		        ,
+		null                    passenger_flow	        ,
+		null                    ratio			        ,
+		b.area_code				area_code		        ,
+		b.org_group				org_group		        ,
+	    b.org_group_id			org_group_id				 	
+	from bz_busrunrecordld partition ('||v_partition||') a, rpt_busiquery_route b 
+	where a.routeid = b.route_id
+	and a.rectype = ''1''
+	and a.isactive = ''1''
+	and to_char(b.business_date,''yyyymmdd'') = '||v_date_immediate||'
+	group by a.rundatadate, b.route_name, a.routeid, b.area_code, b.org_group, b.org_group_id,
+	case when to_char(a.leavetime,''hh24:mi:ss'') < ''06:00:00'' 
+			 then ''00:00-06:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''06:00:00'' and ''07:00:00''
+			 then ''06:00-07:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''07:00:00'' and ''08:00:00''
+			 then ''07:00-08:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''08:00:00'' and ''09:00:00''
+			 then ''08:00-09:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''09:00:00'' and ''10:00:00''
+			 then ''09:00-10:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''10:00:00'' and ''11:00:00''
+			 then ''10:00-11:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''11:00:00'' and ''12:00:00''
+			 then ''11:00-12:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''12:00:00'' and ''13:00:00''
+			 then ''12:00-13:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''13:00:00'' and ''14:00:00''
+			 then ''13:00-14:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''14:00:00'' and ''15:00:00''
+			 then ''14:00-15:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''15:00:00'' and ''16:00:00''
+			 then ''15:00-16:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''16:00:00'' and ''17:00:00''
+			 then ''16:00-17:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''17:00:00'' and ''18:00:00''
+			 then ''17:00-18:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''18:00:00'' and ''19:00:00''
+			 then ''18:00-19:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''19:00:00'' and ''20:00:00''
+			 then ''19:00-20:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''20:00:00'' and ''21:00:00''
+			 then ''20:00-21:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''21:00:00'' and ''22:00:00''
+			 then ''21:00-22:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''22:00:00'' and ''23:00:00''
+			 then ''22:00-23:00''
+			 when to_char(a.leavetime,''hh24:mi:ss'') between ''23:00:00'' and ''24:00:00''
+			 then ''23:00-24:00''
+			 else ''00:00-06:00''
+	end'
+	;
+    commit;	
+	
+	update rpt_splysecu_passflowtocap set business_date = v_date where business_date is null;
+	commit;
+	
+	update rpt_splysecu_passflowtocap a
+	set passenger_flow = (select b.shuaka_cika_count + b.shuaka_dianziqianbao_count + b.toubi_count
+						 from rpt_splysecu_flowandincome b
+						 where a.oper_date = b.oper_date
+						 and a.org_group_id = b.org_group_id
+						 and a.business_date = b.business_date
+						 )
+	where business_date = v_date;
+	commit;
+	
+	update rpt_splysecu_passflowtocap
+	set ratio = decode(oper_cap, 0, 0, round(passenger_flow/oper_cap,2))
+	where business_date = v_date;
+	commit;
+
+	--***************************优先设施分析???**********************
+    delete from rpt_splysecu_piorfacility where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+	delete from rpt_splysecu_piorfacility where business_date = v_date;
+	commit;
+	
+	insert into rpt_splysecu_piorfacility (
+		business_date				, 
+		yearmonth					,
+		bus_lane_length				,
+		priority_intersection_count	,
+		area_code					,
+		org_group					,
+		org_group_id				
+	)	
+	select 
+		v_date					business_date					,
+	    to_char(v_date,'YYYYMM') yearmonth						,	
+		sum(bus_lane_length)	bus_lane_length				    ,	
+		null					priority_intersection_count	    ,	--'优先路口个数';
+		'中心城区'				area_code					    ,	
+		null                    org_group					    ,	
+		null                    org_group_id				    	
+	from map_bus_lane
+	;
+    commit;	
+	
+end;
+
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_policyprefer_info                                                            *
+*                                                                                               *
+*  File Name   : p_policyprefer_info.prc                                                        *
+*                                                                                               *
+*  Description : 政策优惠		                                                            	*
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 12-Nov-16   1.0      Liu Mingshun      Initial release                                        *
+************************************************************************************************/
+procedure p_policyprefer_info
+as
+	v_date				date:=getbusinessdate;
+	v_partition			varchar2(20);
+	v_date_immediate	varchar2(20);
+begin
+	v_partition := 'P_'||to_char(v_date,'yyyymmdd');
+	v_date_immediate := to_char(v_date,'yyyymmdd');
+
+	--***************************站点时段刷卡客流分析????**********************
+    delete from rpt_policyprefer_passflow where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+    delete from rpt_policyprefer_passflow where business_date = v_date;
+	commit;
+	
+ 	execute immediate '	
+    insert into rpt_policyprefer_passflow (
+		business_date			,
+		query_date				,
+		route_id		        ,
+		route_name		        ,
+		station_no		        ,
+		station_name	        ,
+		holiday_flag	        ,
+		time_section	        ,
+		flow_count		        ,
+		area_code		        ,
+		org_group_id	        ,
+		org_group		
+    )
+    select  
+		trunc(a.actdatetime)				business_date	,
+		trunc(a.actdatetime)				query_date		,
+		a.routeid							route_id		,
+		b.route_name						route_name		,
+		a.stationnum						station_no		,
+		null							    station_name	,
+		null							    holiday_flag	,
+		case when to_char(a.actdatetime,''hh24:mi:ss'') < ''06:00:00'' 
+			 then ''00:00-06:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''06:00:00'' and ''07:00:00''
+			 then ''06:00-07:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''07:00:00'' and ''08:00:00''
+			 then ''07:00-08:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''08:00:00'' and ''09:00:00''
+			 then ''08:00-09:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''09:00:00'' and ''10:00:00''
+			 then ''09:00-10:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''10:00:00'' and ''11:00:00''
+			 then ''10:00-11:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''11:00:00'' and ''12:00:00''
+			 then ''11:00-12:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''12:00:00'' and ''13:00:00''
+			 then ''12:00-13:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''13:00:00'' and ''14:00:00''
+			 then ''13:00-14:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''14:00:00'' and ''15:00:00''
+			 then ''14:00-15:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''15:00:00'' and ''16:00:00''
+			 then ''15:00-16:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''16:00:00'' and ''17:00:00''
+			 then ''16:00-17:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''17:00:00'' and ''18:00:00''
+			 then ''17:00-18:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''18:00:00'' and ''19:00:00''
+			 then ''18:00-19:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''19:00:00'' and ''20:00:00''
+			 then ''19:00-20:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''20:00:00'' and ''21:00:00''
+			 then ''20:00-21:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''21:00:00'' and ''22:00:00''
+			 then ''21:00-22:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''22:00:00'' and ''23:00:00''
+			 then ''22:00-23:00''
+			 when to_char(a.actdatetime,''hh24:mi:ss'') between ''23:00:00'' and ''24:00:00''
+			 then ''23:00-24:00''
+			 else ''00:00-06:00''
+		end 					    		time_section	,
+		null							    flow_count		,
+		b.area_code							area_code		,
+		b.org_group_id						org_group_id	,
+		b.org_group							org_group		
+	from bsvcbusrundatald5 partition ('||v_partition||') a, rpt_busiquery_route b
+	where a.datatype = ''4''
+	and a.routeid = b.route_id
+	and trunc(a.actdatetime) = b.business_date
+	and to_char(b.business_date,''yyyymmdd'') = '||v_date_immediate;
+    commit;
+	
+	update rpt_policyprefer_passflow a
+	set station_name = (select station_name
+						from rpt_busiquery_station b
+						where a.station_no = b.station_id
+						and b.business_date = a.business_date
+					)
+	where a.business_date = v_date;
+	commit;
+	
+	--***************************优惠分析**********************
+    delete from rpt_policyprefer_preferential where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+	delete from rpt_policyprefer_preferential where business_date = v_date;
+	commit;
+	
+    insert /*+append*/ into rpt_policyprefer_preferential (
+		business_date			, 
+		query_date				,
+		preferential_amount	    ,
+		oper_amount			    ,
+		preferential_count	    ,
+		flow_count			    ,
+		area_code			    ,
+		org_group_id		    ,
+		org_group			
+	)	
+	select 
+		v_date								business_date		,
+	    oper_date							query_date			,
+	    (nvl(shuaka_cika_youhui_amt,0) + nvl(shuaka_dzqb_youhui_amt,0)) 					preferential_amount	,
+	    (nvl(shuaka_cika_amt,0) + nvl(shuaka_dianziqianbao_amt,0) + nvl(toubi_amount,0))  	oper_amount,
+	    (nvl(shuaka_cika_youhui_count,0) + nvl(shuaka_dzqb_youhui_count,0))		 			preferential_count	,
+	    (nvl(shuaka_cika_count,0) + nvl(shuaka_dianziqianbao_count,0) + nvl(toubi_count,0))	flow_count,
+	    area_code							area_code			,
+	    org_group_id						org_group_id		,
+	    org_group							org_group					
+	from rpt_splysecu_flowandincome
+	where business_date = v_date
+	;
+    commit;	
+	
+	--***************************线路首末班刷卡**********************
+    delete from rpt_policyprefer_flcard where business_date < v_date and business_date <> add_months(trunc(business_date,'mm'), +1)-1;
+	delete from rpt_policyprefer_flcard where business_date = v_date;
+	commit;
+	
+    insert /*+append*/ into rpt_policyprefer_flcard (
+		business_date			, 
+		query_date				,
+		route_id			    ,
+		route_name			    ,
+		leave_station		    ,
+		arrive_station		    ,
+		first_last_flag		    ,
+		leave_time			    ,
+		arrive_time			    ,
+		card_no				    ,
+		bus_length			    ,
+		count_by_card		    ,
+		area_code			    ,
+		org_group_id		    ,
+		org_group					
+	)	
+	select 
+		v_date				business_date	,
+		a.run_date			query_date		,
+        a.route_id			route_id		,
+        c.route_name		route_name		,
+        a.leave_station		leave_station	,
+        a.arrive_station	arrive_station	,
+        a.first_last_flag	first_last_flag	,
+        a.actual_leavetime	leave_time		,
+        a.actual_arrivetime	arrive_time		,
+        b.card_id			card_no			,
+        b.bus_length		bus_length		,
+        count(d.cardno)		count_by_card	,  --+nvl(e.dianziqianbaorenci,0)
+        a.area_code			area_code		,
+        a.org_group_id		org_group_id	,
+        a.org_group			org_group		
+	from rpt_first_last_run a, rpt_busiquery_businfo b, rpt_busiquery_route c
+		, v_tbmonth_temp d --, as_sc_icincome e
+	where a.business_date = v_date
+	and a.bus_id = b.bus_id
+	and a.business_date = b.business_date
+	and a.route_id = c.route_id
+	and a.business_date = c.business_date
+	and a.run_date = trunc(d.consumedate(+))
+	and a.route_id = d.lineno(+)
+	and a.bus_self_id = d.busno(+)
+	--and a.bus_self_id = e.chehao(+)
+	--and a.actual_leavetime <= e.riqi(+)
+	--and a.actual_arrivetime >= e.riqi(+)
+	group by a.run_date,
+			 a.route_id,
+	         c.route_name,
+	         a.leave_station,
+	         a.arrive_station,
+	         a.first_last_flag,
+	         a.actual_leavetime,
+	         a.actual_arrivetime,
+	         b.card_id,
+	         b.bus_length,	
+	         a.area_code,
+	         a.org_group_id,
+	         a.org_group
+			 --e.dianziqianbaorenci
+	;
+    commit;	
+
+    update rpt_policyprefer_flcard a
+	set leave_station = (select distinct b.stationname 
+						 from mcstationinfogs b
+						 where a.leave_station = b.stationid
+						 )
+	where a.business_date = v_date;
+	commit;
+	
+	update rpt_policyprefer_flcard a
+	set arrive_station = (select distinct b.stationname 
+						 from mcstationinfogs b
+						 where a.arrive_station = b.stationid
+						 )
+	where a.business_date = v_date;
+	commit;
+		
+end;
+
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_macro_cia                                                            		*
+*                                                                                               *
+*  File Name   : p_macro_cia.prc                                                        		*
+*                                                                                               *
+*  Description : p_macro_cia                                                            		*
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 13-Oct-16   1.0      Liu Mingshun      Initial release                                         *
+************************************************************************************************/
+procedure p_macro_cia
+as
+	v_date				date:=getbusinessdate;
+	v_partition			varchar2(20);
+	v_date_immediate	varchar2(20);
+	v_train_punct_rate	number;
+	v_standard			number;
+begin
+	v_partition := 'P_'||to_char(v_date,'yyyymm');
+	v_date_immediate := to_char(v_date,'yyyymmdd');
+
+	--***************************公交设施**********************
+	delete from rpt_macro_cia_bus_inst where business_date = v_date;
+	commit;
+	
+    dbms_output.put_line('insert into table for 公交设施');
+    insert /*+append*/ into rpt_macro_cia_bus_inst (
+		business_date	,
+		cia_date 		,
+		area_code		,
+		org_group		,
+		org_group_id	,
+		route_count 	,
+		route_length 	,
+		subroute_count	,
+		site_count 		,
+		station_count 	,
+		emp_count 		,
+		driver_count 	
+    )
+    select distinct 
+		v_date            business_date		,
+		v_date			  cia_date 			,
+		regional_category area_code			,
+		orggroup		  org_group			,
+		orggroupid		  org_group_id		,
+		0				  route_count 		,
+		0				  route_length 		,
+		0				  subroute_count	,
+		0				  site_count 		,
+		0				  station_count 	,
+		0				  emp_count 		,
+		0	              driver_count 	
+	from map_org_regional a
+	;
+    commit;
+    
+	dbms_output.put_line('update 线路条数');
+	update rpt_macro_cia_bus_inst a
+	set (route_count,subroute_count) = 
+					(select count(*),sum(length(b.sub_route_id)-length(replace(b.sub_route_id,',',''))+1) subroute_count
+					 from rpt_busiquery_route b 
+					 where a.area_code = b.area_code 
+					 and a.org_group_id = b.org_group_id
+					 and a.business_date = b.business_date
+					)
+	where a.business_date = v_date;
+	commit;
+	
+	dbms_output.put_line('update 线路长度');
+	update rpt_macro_cia_bus_inst a
+	set route_length = (select sum(b.route_length)
+						from rpt_busiquery_route b 
+						where a.area_code = b.area_code 
+						and a.org_group_id = b.org_group_id
+						and a.business_date = b.business_date
+						)
+	where a.business_date = v_date;
+	commit;
+	
+	dbms_output.put_line('update 场站数量');
+	update rpt_macro_cia_bus_inst a
+	set site_count = (	select count(*) 
+						from rpt_busiquery_site b 
+						where b.business_date = a.business_date
+						--and b.area_code = a.area_code
+						--and a.org_group_id = b.org_group_id
+						)
+	where a.business_date = v_date
+	and a.org_group = '成都市公共交通集团公司';
+	commit;
+	
+	dbms_output.put_line('update 站点数量');
+	update rpt_macro_cia_bus_inst a
+	set station_count = (select count(*) 
+						 from rpt_busiquery_station b
+						 where b.business_date = a.business_date
+						 and a.org_group = b.org_group
+						)
+	where a.area_code = '中心城区'
+	and a.org_group = '成都市公共交通集团公司'
+	and a.business_date = v_date;
+	commit;
+	
+	dbms_output.put_line('update 从业人员数量');
+	update rpt_macro_cia_bus_inst a
+	set emp_count = (select count(*) 
+					 from rpt_busiquery_emp b 
+					 where a.area_code = b.area_code
+					 and a.org_group_id = b.org_group_id
+					 and a.business_date = b.business_date)
+	where a.business_date = v_date;
+	commit;
+	
+	dbms_output.put_line('update 驾驶员数量');
+	update rpt_macro_cia_bus_inst a
+	set driver_count = (select count(*) 
+						from rpt_busiquery_emp b 
+						where a.area_code = b.area_code 
+						and a.org_group_id = b.org_group_id
+						and b.position_type = '驾驶员'
+						and a.business_date = b.business_date)
+	where a.business_date = v_date;
+	commit;
+
+	dbms_output.put_line('insert into table for 全部');
+    insert /*+append*/ into rpt_macro_cia_bus_inst (
+		business_date	,
+		cia_date 		,
+		area_code		,
+		org_group		,
+		org_group_id	,
+		route_count 	,
+		route_length 	,
+		subroute_count	,
+		site_count 		,
+		station_count 	,
+		emp_count 		,
+		driver_count 	
+    )
+    select  
+		business_date     		business_date	,
+		cia_date		  		cia_date 		,
+		area_code			  	area_code		,
+		'区域全部'			  	org_group		,
+		null			  		org_group_id	,
+		sum(route_count) 	  	route_count 	,
+		sum(route_length) 	  	route_length 	,
+		sum(subroute_count)  	subroute_count	,
+		sum(site_count) 	  	site_count 		,
+		sum(station_count)   	station_count 	,
+		sum(emp_count) 	  		emp_count 		,
+		sum(driver_count) 	  	driver_count 	
+	from rpt_macro_cia_bus_inst a
+	where a.business_date = v_date
+	and a.area_code <> '全部'
+	and nvl(a.org_group,'0') <> '区域全部'
+	group by business_date, cia_date, area_code
+	union all
+	select  
+		business_date     		business_date	,
+		cia_date		  		cia_date 		,
+		'全部' 			  		area_code		,
+		null			  		org_group		,
+		null			  		org_group_id	,
+		sum(route_count) 	  	route_count 	,
+		sum(route_length) 	  	route_length 	,
+		sum(subroute_count)  	subroute_count	,
+		sum(site_count) 	  	site_count 		,
+		sum(station_count)   	station_count 	,
+		sum(emp_count) 	  		emp_count 		,
+		sum(driver_count) 	  	driver_count 	
+	from rpt_macro_cia_bus_inst a
+	where a.business_date = v_date
+	and a.area_code <> '全部'
+	and nvl(a.org_group,'0') <> '区域全部'
+	group by business_date, cia_date
+	;
+    commit;
+
+	--***************************车辆投入**********************
+	delete from rpt_macro_cia_bus_invest where business_date = v_date;
+	commit;
+	
+    dbms_output.put_line('insert into table for 车辆投入');
+    insert /*+append*/ into rpt_macro_cia_bus_invest (
+		business_date			,
+		cia_date 				,
+		area_code				,
+		org_group				,
+		org_group_id			,
+		owned_qty 				,
+		actual_op_qty 			,
+		op_qty 					,
+		standard_qty 			,
+		aircond_qty				,
+		oper_mile			    ,
+		total_mile			    ,
+		oper_invest_time	    ,
+		total_invest_time	    ,
+		air_cond_scale 			,
+		invest_qty_util_ratio 	,
+		invest_mil_util_ratio 	,
+		invest_time_util_ratio 		
+    )
+    select distinct 
+		v_date            		business_date			,
+		v_date			  		cia_date 				,
+		regional_category 		area_code				,
+		orggroup				org_group				,
+		orggroupid				org_group_id			,
+		0						owned_qty 				,
+		0						actual_op_qty 			,
+		0						op_qty 					,
+		0						standard_qty 			,
+		0						aircond_qty				,
+		0						oper_mile			    ,
+		0						total_mile			    ,
+		0						oper_invest_time	    ,
+		0						total_invest_time	    ,
+		0						air_cond_scale 			,
+		0						invest_qty_util_ratio 	,
+		0						invest_mil_util_ratio 	,
+		0						invest_time_util_ratio 	
+	from map_org_regional a
+	;
+    commit;
+	
+	dbms_output.put_line('update 车辆保有量');
+	update rpt_macro_cia_bus_invest a
+	set owned_qty = (select count(*) 
+					 from rpt_busiquery_businfo b 
+					 where a.area_code = b.area_code
+					 and a.org_group_id = b.org_group_id
+					 and a.business_date = b.business_date)
+	where a.business_date = v_date;
+	commit;
+	
+	dbms_output.put_line('update 实际运营车辆数');
+	execute immediate '
+	update rpt_macro_cia_bus_invest a
+	set actual_op_qty = (
+						select count(*) 
+						from rpt_busiquery_businfo b
+						where exists (select 1 from bz_busrunrecordld partition ('||v_partition||') c 
+									  where b.bus_id = c.busid
+									  and c.isactive = ''1''
+									  and c.rectype = ''1''
+									  )
+						and a.area_code = b.area_code
+						and a.org_group_id = b.org_group_id
+						and a.business_date = b.business_date
+	)
+	where to_char(a.business_date,''yyyymmdd'') = '||v_date_immediate;
+	commit;
+	
+	dbms_output.put_line('update 可运营车辆');
+	update rpt_macro_cia_bus_invest a
+	set op_qty = (	select count(*) 
+					from rpt_busiquery_businfo b 
+					where b.bus_operate_type = '运营车辆' 
+					and a.area_code = b.area_code
+					and a.org_group_id = b.org_group_id
+					and a.business_date = b.business_date
+				)
+	where a.business_date = v_date;
+	commit;
+	
+	dbms_output.put_line('update 车辆标台');
+	update rpt_macro_cia_bus_invest a
+	set standard_qty = (select sum(stdcoefficient) 
+						from rpt_busiquery_businfo b 
+						where b.area_code = a.area_code
+						and a.org_group_id = b.org_group_id
+						and a.business_date = b.business_date
+						)
+	where a.business_date = v_date;
+	commit;
+
+	dbms_output.put_line('update 空调车数量');
+	update rpt_macro_cia_bus_invest r
+	set aircond_qty = (select count(bus_id) 
+						from rpt_busiquery_businfo a
+						where a.air_conditioned='是'
+						and a.business_date = r.business_date
+						and a.area_code = r.area_code
+						and a.org_group_id = r.org_group_id
+					)
+	where r.business_date = v_date;
+	commit;
+
+	dbms_output.put_line('update 运营里程数，总里程数||运营投入时间，总投入时间');
+	execute immediate '
+	update rpt_macro_cia_bus_invest rpt
+	set (oper_mile,total_mile,oper_invest_time,total_invest_time) = 
+						(
+							select sum(decode(a.rectype, ''1'', decode(sign(a.gpsmile),1,a.gpsmile,a.milenum), 0)) omile, 
+								   sum(decode(sign(a.gpsmile),1,a.gpsmile,a.milenum)) tmile,
+								   round(sum(case when a.rectype = ''1'' then (a.arrivetime-a.leavetime)*24 else 0 end),2) otime,
+								   round(sum((a.arrivetime-a.leavetime)*24),2) ttime
+							from bz_busrunrecordld partition ('||v_partition||') a, rpt_busiquery_businfo b
+							where a.busid = b.bus_id
+							and a.isactive = ''1''
+							and b.business_date = rpt.business_date
+							and rpt.area_code = b.area_code
+							and rpt.org_group_id = b.org_group_id
+						)
+	where to_char(rpt.business_date,''yyyymmdd'') = '||v_date_immediate;
+	commit;
+	
+	dbms_output.put_line('insert into table for 全部');
+	insert into rpt_macro_cia_bus_invest (
+		business_date			,
+		cia_date 				,
+		area_code				,
+		org_group				,
+		org_group_id			,
+		owned_qty 				,
+		actual_op_qty 			,
+		op_qty 					,
+		standard_qty 			,
+		aircond_qty				,
+		oper_mile			    ,
+		total_mile			    ,
+		oper_invest_time	    ,
+		total_invest_time	    ,
+		air_cond_scale 			,
+		invest_qty_util_ratio 	,
+		invest_mil_util_ratio 	,
+		invest_time_util_ratio 		
+    )
+    select  
+		business_date           business_date			,
+		cia_date			  	cia_date 				,
+		area_code				area_code				,
+		'区域全部'				org_group				,
+		null					org_group_id			,
+		sum(owned_qty) 			owned_qty 				,
+		sum(actual_op_qty)		actual_op_qty 			,
+		sum(op_qty) 			op_qty 					,
+		sum(standard_qty) 		standard_qty 			,
+		sum(aircond_qty) 		aircond_qty				,
+		sum(oper_mile)			oper_mile			    ,
+		sum(total_mile)			total_mile			    ,
+		sum(oper_invest_time)	oper_invest_time	    ,
+		sum(total_invest_time)	total_invest_time	    ,
+		0						air_cond_scale 			,
+		0						invest_qty_util_ratio 	,
+		0						invest_mil_util_ratio 	,
+		0						invest_time_util_ratio 	
+	from rpt_macro_cia_bus_invest a
+	where a.business_date = v_date
+	and a.area_code <> '全部'
+	and nvl(a.org_group,'0') <> '区域全部'
+	group by business_date, cia_date, area_code
+	union all
+	select  
+		business_date           business_date			,
+		cia_date			  	cia_date 				,
+		'全部' 					area_code				,
+		null					org_group				,
+		null					org_group_id			,
+		sum(owned_qty) 			owned_qty 				,
+		sum(actual_op_qty)		actual_op_qty 			,
+		sum(op_qty) 			op_qty 					,
+		sum(standard_qty) 		standard_qty 			,
+		sum(aircond_qty) 		aircond_qty				,
+		sum(oper_mile)			oper_mile			    ,
+		sum(total_mile)			total_mile			    ,
+		sum(oper_invest_time)	oper_invest_time	    ,
+		sum(total_invest_time)	total_invest_time	    ,
+		0						air_cond_scale 			,
+		0						invest_qty_util_ratio 	,
+		0						invest_mil_util_ratio 	,
+		0						invest_time_util_ratio 	
+	from rpt_macro_cia_bus_invest a
+	where a.business_date = v_date
+	and a.area_code <> '全部'
+	and nvl(a.org_group,'0') <> '区域全部'
+	group by business_date, cia_date;
+    commit;
+   
+	dbms_output.put_line('update 空调车比例');
+	update rpt_macro_cia_bus_invest r
+	set air_cond_scale = aircond_qty/decode(owned_qty,0,1,owned_qty) *100
+	where r.business_date = v_date;
+	commit;
+
+	dbms_output.put_line('update 车辆投入数量利用率：');
+	update rpt_macro_cia_bus_invest a
+	set invest_qty_util_ratio = (actual_op_qty/decode(owned_qty,0,1,owned_qty))*100
+	where a.business_date = v_date;
+	commit;
+
+	dbms_output.put_line('update 车辆投入里程利用率');
+	update rpt_macro_cia_bus_invest a
+	set invest_mil_util_ratio = oper_mile/decode(total_mile,0,1,total_mile)*100
+	where a.business_date = v_date;
+	commit;
+	
+	dbms_output.put_line('update 车辆投入时间利用率');
+	update rpt_macro_cia_bus_invest a
+	set invest_time_util_ratio = oper_invest_time/decode(total_invest_time,0,1,total_invest_time)*100
+	where a.business_date = v_date;
+	commit;
+	
+	--******************************运能投入**********************************
+	delete from rpt_macro_cia_cap_invest where business_date = v_date;
+	commit;
+	
+    dbms_output.put_line('insert into table for 运能投入');
+    insert /*+append*/ into rpt_macro_cia_cap_invest (
+		business_date			,
+		cia_date 				,
+		area_code				,
+		org_group				,
+		org_group_id			,
+		depa_freq				,
+		op_mil 					,
+		op_hours 
+    )
+    select distinct 
+		v_date            		business_date	,
+		v_date			  		cia_date 		,
+		regional_category 		area_code		,
+		orggroup				org_group		,
+		orggroupid				org_group_id	,
+		0						depa_freq 		,
+		0						op_mil 			,
+		0						op_hours
+	from map_org_regional a
+	;
+    commit;
+	
+	dbms_output.put_line('update 发车班次,运营里程,运营时间');
+	execute immediate '
+	update rpt_macro_cia_cap_invest a
+	set (depa_freq,op_mil,op_hours) = (
+					select count(*), sum(decode(sign(b.gpsmile),1,b.gpsmile,b.milenum)),round(sum((b.arrivetime-b.leavetime)*24),2)
+					from bz_busrunrecordld partition ('||v_partition||') b, rpt_busiquery_businfo c
+					where b.busid = c.bus_id
+					and b.rundatadate = a.business_date
+					and b.isactive = 1
+					and b.rectype = 1
+					and a.area_code = c.area_code
+					and a.org_group_id = c.org_group_id
+					and c.business_date = a.business_date
+				)
+	where to_char(a.business_date,''yyyymmdd'') = '||v_date_immediate;
+	commit;
+
+	dbms_output.put_line('insert into table for 全部');
+    insert /*+append*/ into rpt_macro_cia_cap_invest (
+		business_date			,
+		cia_date 				,
+		area_code				,
+		org_group				,
+		org_group_id			,
+		depa_freq				,
+		op_mil 					,
+		op_hours 
+    )
+    select  
+		business_date       business_date	,
+		cia_date			cia_date 		,
+		area_code			area_code		,
+		'区域全部'			org_group		,
+		null				org_group_id	,
+		sum(depa_freq) 		depa_freq 		,
+		sum(op_mil) 		op_mil 			,
+		sum(op_hours)		op_hours
+	from rpt_macro_cia_cap_invest a
+	where a.business_date = v_date
+	and a.area_code <> '全部'
+	and nvl(a.org_group,'0') <> '区域全部'
+	group by business_date, cia_date, area_code
+	union all
+	select  
+		business_date       business_date	,
+		cia_date			cia_date 		,
+		'全部' 				area_code		,
+		null				org_group		,
+		null				org_group_id	,
+		sum(depa_freq) 		depa_freq 		,
+		sum(op_mil) 		op_mil 			,
+		sum(op_hours)		op_hours
+	from rpt_macro_cia_cap_invest a
+	where a.business_date = v_date
+	and a.area_code <> '全部'
+	and nvl(a.org_group,'0') <> '区域全部'
+	group by business_date, cia_date
+	;
+    commit;
+	
+	--******************************服务质量**********************************
+	delete from rpt_macro_cia_sve_quty where business_date = v_date;
+	commit;
+	
+    dbms_output.put_line('insert into table for 服务质量');
+    insert /*+append*/ into rpt_macro_cia_sve_quty (
+		business_date				,
+		cia_date 					,
+		first_last_punct_rate 		,
+		train_punct_rate 			,
+		ontime_train_count	 		,
+		total_train_count	 		,
+		shift_fulfilled_rate 		,
+		depa_inte_fulfilled_rate 	,
+		area_code 					,
+		org_group					,
+		org_group_id
+    )
+    select distinct 
+		v_date            		business_date				,
+		v_date			  		cia_date 					,
+		0				 		first_last_punct_rate		,		
+		0						train_punct_rate 			,
+		0						ontime_train_count	 		,
+		0						total_train_count	 		,
+		0						shift_fulfilled_rate 		,
+		0						depa_inte_fulfilled_rate	,
+		regional_category		area_code					,
+		orggroup				org_group					,
+		orggroupid				org_group_id
+	from map_org_regional a
+	;
+    commit;
+	
+	dbms_output.put_line('update 首末班准点率(不含全部)');
+	update rpt_macro_cia_sve_quty a
+	set first_last_punct_rate = (
+					select round(sum(frun_ontime_count+lrun_ontime_count)
+						/decode(sum(first_run_count+last_run_count),0,1,sum(first_run_count+last_run_count))*100,0)
+					from rpt_svcquality_flontime b
+					where b.business_date = a.business_date
+					and a.area_code = b.area_code
+					and a.org_group_id = b.org_group_id
+				)
+	where a.business_date = v_date
+	and a.area_code <> '全部'
+	and nvl(a.org_group,'0') <> '区域全部';
+	commit;
+
+	dbms_output.put_line('update 车次准点数，车次总数');
+	select code_value into v_standard
+	from map_code_master
+	where code_category ='ONTIME_STANDARD';
+	
+	execute immediate '
+	update rpt_macro_cia_sve_quty rpt
+	set (ontime_train_count,total_train_count) = 
+						(select sum(case when a.leavetime < b.leavetime or (b.leavetime-a.leavetime)*24*60<'||v_standard||'
+										 then 1 else 0 
+									end) ontime, count(1) total
+							from bz_busrunrecordld partition ('||v_partition||') a, bz_busdisplanld partition ('||v_partition||') b
+								,map_org_regional c 
+							where a.displanid = b.displandid
+							and a.orgid = c.orgid
+							and a.rectype = ''1''
+							and a.isactive = ''1''
+							and rpt.area_code = c.regional_category
+							and rpt.org_group_id = c.orggroupid
+						)
+	where rpt.area_code <> ''全部''
+	and rpt.org_group <> ''区域全部''
+	and to_char(rpt.business_date,''yyyymmdd'') = '||v_date_immediate;
+	commit;
+	
+	dbms_output.put_line('insert into table for 全部');
+    insert /*+append*/ into rpt_macro_cia_sve_quty (
+		business_date				,
+		cia_date 					,
+		first_last_punct_rate 		,
+		train_punct_rate 			,
+		ontime_train_count	 		,
+		total_train_count	 		,
+		shift_fulfilled_rate 		,
+		depa_inte_fulfilled_rate 	,
+		area_code 					,
+		org_group					,
+		org_group_id
+    )
+    select 
+		business_date      			business_date				,
+		cia_date					cia_date 					,
+		0				 			first_last_punct_rate		,		
+		0							train_punct_rate 			,
+		sum(ontime_train_count)	 	ontime_train_count			,
+		sum(total_train_count)	 	total_train_count			,
+		0							shift_fulfilled_rate 		,
+		0							depa_inte_fulfilled_rate	,
+		area_code					area_code					,
+		'区域全部'					org_group					,
+		null						org_group_id
+	from rpt_macro_cia_sve_quty a
+	where a.business_date = v_date
+	and a.area_code <> '全部'
+	and nvl(a.org_group,'0') <> '区域全部'
+	group by business_date, cia_date, area_code
+	union all
+	select 
+		business_date      			business_date				,
+		cia_date					cia_date 					,
+		0				 			first_last_punct_rate		,		
+		0							train_punct_rate 			,
+		sum(ontime_train_count)	 	ontime_train_count			,
+		sum(total_train_count)	 	total_train_count			,
+		0							shift_fulfilled_rate 		,
+		0							depa_inte_fulfilled_rate	,
+		'全部'						area_code					,
+		null						org_group					,
+		null						org_group_id
+	from rpt_macro_cia_sve_quty a
+	where a.business_date = v_date
+	and a.area_code <> '全部'
+	and nvl(a.org_group,'0') <> '区域全部'
+	group by business_date, cia_date
+	;
+    commit;
+	
+	dbms_output.put_line('update 首末班准点率-区域全部');
+	update rpt_macro_cia_sve_quty a
+	set first_last_punct_rate = (
+					select round(sum(frun_ontime_count+lrun_ontime_count)
+						/decode(sum(first_run_count+last_run_count),0,1,sum(first_run_count+last_run_count))*100,0)
+					from rpt_svcquality_flontime b
+					where a.area_code = b.area_code
+					and b.business_date = a.business_date
+				)
+	where a.business_date = v_date
+	and a.org_group = '区域全部'
+	and a.area_code <> '全部';
+	commit;
+	
+	dbms_output.put_line('update 首末班准点率-全部');
+	update rpt_macro_cia_sve_quty a
+	set first_last_punct_rate = (
+					select round(sum(frun_ontime_count+lrun_ontime_count)
+						/decode(sum(first_run_count+last_run_count),0,1,sum(first_run_count+last_run_count))*100,0)
+					from rpt_svcquality_flontime b
+					where b.business_date = a.business_date
+				)
+	where a.business_date = v_date
+	and nvl(a.org_group,'0') <> '区域全部'
+	and a.area_code = '全部';
+	commit;
+	
+	
+	dbms_output.put_line('update for 车次准点率(包含全部)');
+	update rpt_macro_cia_sve_quty a
+	set train_punct_rate = round(ontime_train_count/decode(total_train_count,0,1,total_train_count)*100,2)
+	where a.business_date = v_date;
+	commit;
+	
+	dbms_output.put_line('update for 发车间隔兑现率(不包含全部)');
+	update rpt_macro_cia_sve_quty a
+	set depa_inte_fulfilled_rate = 
+					   (select round((total_train_count-sum(b.dep_interval_failed))/decode(total_train_count,0,1,total_train_count)*100,2)
+						from rpt_svcquality_depinterval b
+						where a.business_date = b.business_date
+						and a.org_group_id = b.org_group_id
+						and a.area_code = b.area_code
+						)
+	where a.business_date = v_date
+	and a.area_code <> '全部'
+	and nvl(a.org_group,'0') <> '区域全部';
+	commit;
+	
+	dbms_output.put_line('update for 发车间隔兑现率(区域全部)');
+	update rpt_macro_cia_sve_quty a
+	set depa_inte_fulfilled_rate = 
+					   (select round((total_train_count-sum(b.dep_interval_failed))/decode(total_train_count,0,1,total_train_count)*100,2)
+						from rpt_svcquality_depinterval b
+						where a.business_date = b.business_date
+						and a.area_code = b.area_code
+						)
+	where a.business_date = v_date
+	and a.area_code <> '全部'
+	and a.org_group = '区域全部';
+	commit;
+	
+	
+	dbms_output.put_line('update for 发车间隔兑现率(全部)');
+	update rpt_macro_cia_sve_quty a
+	set depa_inte_fulfilled_rate = 
+					   (select round((total_train_count-sum(b.dep_interval_failed))/decode(total_train_count,0,1,total_train_count)*100,2)
+						from rpt_svcquality_depinterval b
+						where a.business_date = b.business_date
+						)
+	where a.business_date = v_date
+	and a.area_code = '全部'
+	and nvl(a.org_group,'0') <> '区域全部';
+	commit;
+	
+	--******************************公交收入和客流分析**********************************
+	delete from rpt_macro_cia_bus_income where business_date = v_date;
+	commit;
+	
+    dbms_output.put_line('insert into table for 公交收入和客流');
+    insert /*+append*/ into rpt_macro_cia_bus_income (
+		business_date		,
+		cia_date			,
+		coin_income   		,
+		ic_income     		,
+		op_income     		,
+		dis_amount    		,
+		ths_income    		,
+		sgl_avg_income		,
+		coin_pt 			,
+		ic_pt 				,
+		psg_flow_pt 		,
+		dis_pt 				,
+		ths_trfc_volume 	,
+		sgl_avg_trfc_volume ,
+		area_code           ,
+		org_group           ,
+		org_group_id
+    )
+    select distinct 
+		v_date            		business_date		,
+		v_date			  		cia_date			,
+		0				 		coin_income   		,		
+		0						ic_income     		,
+		0						op_income     		,
+		0						dis_amount    		,
+		0						ths_income    		,
+		0						sgl_avg_income		,
+		0						coin_pt 			,
+		0						ic_pt 				,
+		0						psg_flow_pt 		,
+		0						dis_pt 				,
+		0						ths_trfc_volume 	,
+		0						sgl_avg_trfc_volume ,
+		regional_category		area_code     		,
+		orggroup				org_group     		,
+		orggroupid				org_group_id
+	from map_org_regional a
+	;
+    commit;
+	
+	dbms_output.put_line('update for 收入和客流');
+	update rpt_macro_cia_bus_income a
+	set (coin_income,
+		 ic_income,
+		 op_income,
+		 dis_amount,
+		 coin_pt,
+		 ic_pt,
+		 psg_flow_pt,
+		 dis_pt
+		 ) = (
+				select 	sum(b.toubi_amount), 
+						sum(nvl(b.shuaka_cika_amt,0)+nvl(b.shuaka_dianziqianbao_amt,0)),
+						sum(nvl(b.toubi_amount,0)+nvl(b.shuaka_cika_amt,0)+nvl(b.shuaka_dianziqianbao_amt,0)),
+						sum(nvl(b.shuaka_cika_youhui_amt,0)+nvl(b.shuaka_dzqb_youhui_amt,0)),
+						sum(nvl(b.toubi_count,0)),
+						sum(nvl(b.shuaka_cika_count,0)+nvl(b.shuaka_dianziqianbao_count,0)),
+						sum(nvl(b.toubi_count,0)+nvl(b.shuaka_cika_count,0)+nvl(b.shuaka_dianziqianbao_count,0)),
+						sum(nvl(b.shuaka_cika_youhui_count,0)+nvl(b.shuaka_dzqb_youhui_count,0))
+				from rpt_splysecu_flowandincome b
+				where a.area_code = b.area_code
+				and a.org_group_id = b.org_group_id
+				and a.business_date = b.business_date
+				and a.cia_date = b.oper_date
+			)
+	where a.business_date = v_date
+	and a.area_code <> '全部'
+	and nvl(a.org_group,'0') <> '区域全部';
+	commit;
+	
+	dbms_output.put_line('update for 千车单车收入和客运量(不含全部)');
+	update rpt_macro_cia_bus_income a
+	set (ths_income, sgl_avg_income, ths_trfc_volume ,sgl_avg_trfc_volume)
+					= (
+						select 	
+							round(a.op_income*1000/decode((b.oper_mile*b.op_qty),0,1,(b.oper_mile*b.op_qty)),2),
+							round(a.op_income/decode(op_qty,0,1,op_qty),2),
+							round(a.psg_flow_pt*1000/decode((b.oper_mile*b.op_qty),0,1,(b.oper_mile*b.op_qty)),2),
+							round(a.psg_flow_pt/decode(b.op_qty,0,1,b.op_qty),2)
+						from rpt_macro_cia_bus_invest b
+						where a.area_code = b.area_code
+						and a.org_group_id = b.org_group_id
+						and a.business_date = b.business_date
+						and a.cia_date = b.cia_date
+					)
+	where a.business_date = v_date
+	and a.area_code <> '全部'
+	and nvl(a.org_group,'0') <> '区域全部';
+	commit;
+	
+	dbms_output.put_line('insert into table for 全部');
+    insert /*+append*/ into rpt_macro_cia_bus_income (
+		business_date		,
+		cia_date			,
+		coin_income   		,
+		ic_income     		,
+		op_income     		,
+		dis_amount    		,
+		ths_income    		,
+		sgl_avg_income		,
+		coin_pt 			,
+		ic_pt 				,
+		psg_flow_pt 		,
+		dis_pt 				,
+		ths_trfc_volume 	,
+		sgl_avg_trfc_volume ,
+		area_code           ,
+		org_group           ,
+		org_group_id
+    )
+    select   
+		business_date           business_date		,
+		cia_date			  	cia_date			,
+		sum(coin_income)   		coin_income   		,		
+		sum(ic_income)     		ic_income     		,
+		sum(op_income)     		op_income     		,
+		sum(dis_amount)    		dis_amount    		,
+		0    					ths_income    		,
+		0						sgl_avg_income		,
+		sum(coin_pt) 			coin_pt 			,
+		sum(ic_pt) 				ic_pt 				,
+		sum(psg_flow_pt) 		psg_flow_pt 		,
+		sum(dis_pt) 			dis_pt 				,
+		0 						ths_trfc_volume 	,
+		0						sgl_avg_trfc_volume ,
+		area_code				area_code     		,
+		'区域全部'				org_group     		,
+		null					org_group_id
+	from rpt_macro_cia_bus_income a
+	where a.business_date = v_date
+	and a.area_code <> '全部'
+	and nvl(a.org_group,'0') <> '区域全部'
+	group by business_date, cia_date, area_code
+	union all
+	select 
+		business_date           business_date		,
+		cia_date			  	cia_date			,
+		sum(coin_income)   		coin_income   		,		
+		sum(ic_income)     		ic_income     		,
+		sum(op_income)     		op_income     		,
+		sum(dis_amount)    		dis_amount    		,
+		0    					ths_income    		,
+		0						sgl_avg_income		,
+		sum(coin_pt) 			coin_pt 			,
+		sum(ic_pt) 				ic_pt 				,
+		sum(psg_flow_pt) 		psg_flow_pt 		,
+		sum(dis_pt) 			dis_pt 				,
+		0 						ths_trfc_volume 	,
+		0						sgl_avg_trfc_volume ,
+		'全部'					area_code     		,
+		null					org_group     		,
+		null					org_group_id
+	from rpt_macro_cia_bus_income a
+	where a.business_date = v_date
+	and a.area_code <> '全部'
+	and nvl(a.org_group,'0') <> '区域全部'
+	group by business_date, cia_date
+	;
+    commit;
+	
+	dbms_output.put_line('update for 千车单车收入和客运量(区域全部)');
+	update rpt_macro_cia_bus_income a
+	set (ths_income, sgl_avg_income, ths_trfc_volume ,sgl_avg_trfc_volume)
+					= (
+						select 	
+							round(a.op_income*1000/decode((sum(b.oper_mile)*sum(b.op_qty)),0,1,(sum(b.oper_mile)*sum(b.op_qty))),2),
+							round(a.op_income/decode(sum(b.op_qty),0,1,sum(op_qty)),2),
+							round(a.psg_flow_pt*1000/decode((sum(b.oper_mile)*sum(b.op_qty)),0,1,(sum(b.oper_mile)*sum(b.op_qty))),2),
+							round(a.psg_flow_pt/decode(sum(b.op_qty),0,1,sum(b.op_qty)),2)
+						from rpt_macro_cia_bus_invest b
+						where a.area_code = b.area_code
+						and a.business_date = b.business_date
+						and a.cia_date = b.cia_date
+					)
+	where a.business_date = v_date
+	and a.area_code <> '全部'
+	and a.org_group = '区域全部';
+	commit;
+	
+	dbms_output.put_line('update for 千车单车收入和客运量(全部)');
+	update rpt_macro_cia_bus_income a
+	set (ths_income, sgl_avg_income, ths_trfc_volume ,sgl_avg_trfc_volume)
+					= (
+						select 	
+							round(a.op_income*1000/decode((sum(b.oper_mile)*sum(b.op_qty)),0,1,(sum(b.oper_mile)*sum(b.op_qty))),2),
+							round(a.op_income/decode(sum(b.op_qty),0,1,sum(op_qty)),2),
+							round(a.psg_flow_pt*1000/decode((sum(b.oper_mile)*sum(b.op_qty)),0,1,(sum(b.oper_mile)*sum(b.op_qty))),2),
+							round(a.psg_flow_pt/decode(sum(b.op_qty),0,1,sum(b.op_qty)),2)
+						from rpt_macro_cia_bus_invest b
+						where a.business_date = b.business_date
+						and a.cia_date = b.cia_date
+					)
+	where a.business_date = v_date
+	and a.area_code = '全部'
+	and nvl(a.org_group,'0') <> '区域全部';
+	commit;
+	
+end;
+
+
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : p_proc_audit                                                            		*
+*                                                                                               *
+*  File Name   : p_proc_audit.prc                                                        		*
+*                                                                                               *
+*  Description : used for batch run of reports                                             		*
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 23-Oct-16   1.0      Liu Mingshun      Initial release                                        *
+************************************************************************************************/
+procedure p_proc_audit(p_date date default null)
+as
+	v_date date := sysdate;	
+	v_errcode varchar2(20);
+	v_errmsg  varchar2(2000);
+begin
+
+	--************************设置报表业务日期*******************  
+  begin
+	 if p_date is not null
+	 then 
+     P_PRE_BATCH(p_date);
+	 else 
+	 P_PRE_BATCH;
+	 end if;
+	 
+	insert into rpt_proc_audit values('P_PRE_BATCH',v_date,null,'successful');
+	commit;
+
+	exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_PRE_BATCH',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+
+	--*******************************维护企业分类数据*******************  
+	begin
+     P_ENRICH_MAP_ORG_REGIONAL;
+
+	insert into rpt_proc_audit values('P_ENRICH_MAP_ORG_REGIONAL',v_date,null,'successful');
+	commit;
+	
+	exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_ENRICH_MAP_ORG_REGIONAL',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+
+	--*******************************业务查询*******************  
+  begin
+     P_BUSIQUERY_CORP;
+	
+	insert into rpt_proc_audit values('P_BUSIQUERY_CORP',v_date,null,'successful');
+	commit;
+	
+	exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_BUSIQUERY_CORP',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+  
+  begin
+     P_BUSIQUERY_BUSINFO;
+
+	insert into rpt_proc_audit values('P_BUSIQUERY_BUSINFO',v_date,null,'successful');
+	commit;
+	 
+	exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_BUSIQUERY_BUSINFO',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+  
+  begin
+     P_BUSIQUERY_EMP;
+
+	insert into rpt_proc_audit values('P_BUSIQUERY_EMP',v_date,null,'successful');
+	commit;
+	 
+	exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_BUSIQUERY_EMP',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+  
+  begin
+     P_BUSIQUERY_STATION;
+
+	insert into rpt_proc_audit values('P_BUSIQUERY_STATION',v_date,null,'successful');
+	commit;
+	 
+	exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_BUSIQUERY_STATION',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+  
+  begin
+     P_BUSIQUERY_SITE;
+
+	insert into rpt_proc_audit values('P_BUSIQUERY_SITE',v_date,null,'successful');
+	commit;
+	 
+	exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_BUSIQUERY_SITE',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+  
+  begin
+     P_BUSIQUERY_ROUTE;
+
+	insert into rpt_proc_audit values('P_BUSIQUERY_ROUTE',v_date,null,'successful');
+	commit;
+	 
+	exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_BUSIQUERY_ROUTE',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+  
+  --**********************基础设施*******************
+  
+  begin
+     P_INFRA_INFO;
+	 
+	insert into rpt_proc_audit values('P_INFRA_INFO',v_date,null,'successful');
+	commit;
+
+	 exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_INFRA_INFO',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+  
+  --**********************首末班数据*******************
+  
+  begin
+     P_FIRST_LAST_RUN;
+	 
+	insert into rpt_proc_audit values('P_FIRST_LAST_RUN',v_date,null,'successful');
+	commit;
+
+	 exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_FIRST_LAST_RUN',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+  
+  
+  --**********************车辆监控*******************
+	begin
+     P_MONITOR_INFO;
+
+	insert into rpt_proc_audit values('P_MONITOR_INFO',v_date,null,'successful');
+	commit;
+	 
+	exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_MONITOR_INFO',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+ 
+ 
+  --**********************线网分析*******************
+  
+  begin
+     P_NETOPER_AVGDISTANCE;
+	 
+	insert into rpt_proc_audit values('P_NETOPER_AVGDISTANCE',v_date,null,'successful');
+	commit;
+
+	 exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_NETOPER_AVGDISTANCE',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+  
+    
+  --**********************服务质量*******************
+  
+  begin
+     P_SVCQUALITY_DEPCLS;
+	 
+	insert into rpt_proc_audit values('P_SVCQUALITY_DEPCLS',v_date,null,'successful');
+	commit;
+
+	 exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_SVCQUALITY_DEPCLS',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+  
+  
+  begin
+     P_SVCQUALITY_DEPINTERVAL;
+	 
+	insert into rpt_proc_audit values('P_SVCQUALITY_DEPINTERVAL',v_date,null,'successful');
+	commit;
+
+	 exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_SVCQUALITY_DEPINTERVAL',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+  
+  
+  begin
+     P_SVCQUALITY_FLONTIME;
+	 
+	insert into rpt_proc_audit values('P_SVCQUALITY_FLONTIME',v_date,null,'successful');
+	commit;
+
+	 exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_SVCQUALITY_FLONTIME',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+  
+  
+  begin
+     P_SVCQUALITY_CLSRATIONALITY;
+	 
+	insert into rpt_proc_audit values('P_SVCQUALITY_CLSRATIONALITY',v_date,null,'successful');
+	commit;
+
+	 exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_SVCQUALITY_CLSRATIONALITY',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+    
+	
+  --**********************供应保障*******************
+	begin
+     P_SPLYSECU_INFO;
+
+	insert into rpt_proc_audit values('P_SPLYSECU_INFO',v_date,null,'successful');
+	commit;
+	 
+	exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_SPLYSECU_INFO',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+
+    --**********************政策优惠*******************
+	begin
+     P_POLICYPREFER_INFO;
+	 
+	insert into rpt_proc_audit values('P_POLICYPREFER_INFO',v_date,null,'successful');
+	commit;
+
+	 exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_POLICYPREFER_INFO',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+
+  --**********************综合指标*******************
+  begin
+     P_MACRO_CIA;
+
+	insert into rpt_proc_audit values('P_MACRO_CIA',v_date,null,'successful');
+	commit;
+	 
+	exception when others then
+	  v_errcode:=SQLCODE;
+	  v_errmsg :=SQLERRM;
+	  insert into rpt_proc_audit values('P_MACRO_CIA',v_date,v_errcode,v_errmsg);
+	  commit;
+  end;
+
+end;
+
+END pkg_report_datasource;
+/
+

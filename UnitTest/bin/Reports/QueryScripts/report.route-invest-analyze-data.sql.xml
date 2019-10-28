@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="route-invest-analyze-data">
+    <![CDATA[
+select 
+YEARMONTH as YearMonth, 
+ROUTE_COUNT as RouteCount, 
+ROUTE_LENGTH as RouteMiles,
+SYS_COVERAGE as ScheduleRates, 
+AREA_CODE as AreaCode, 
+ORG_GROUP as OrgGroup,
+ORG_GROUP_ID as orggroupid
+  from RPT_SPLYSECU_ROUTEINVEST
+    ]]>
+  </Query>
+</Report>

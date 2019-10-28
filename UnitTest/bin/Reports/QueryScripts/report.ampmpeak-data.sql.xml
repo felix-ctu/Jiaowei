@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="ampmpeak-data">
+    <![CDATA[
+      SELECT 
+      OPER_DATE		as searchdate,		
+	    OPER_TIME_SECTION		as timesection,
+	    OWNED_COUNT			as owncount,
+	    ONLINE_COUNT		as onlcount,
+	    OPER_COUNT			as opercount,
+	    NON_OPER_COUNT		as noopercount,	
+	    AREA_CODE				as areacode,
+	    ORG_GROUP 			as orgname,
+	    ORG_GROUP_ID 		as orgid,
+      row_number() over (order by OPER_DATE) as RowTimeNumber
+      FROM RPT_MONITOR_AMPMPEAK
+    
+    ]]>
+  </Query>
+</Report>

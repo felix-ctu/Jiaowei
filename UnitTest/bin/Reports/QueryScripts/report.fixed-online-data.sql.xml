@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="fixed-online-data">
+    <![CDATA[
+      SELECT org_group AS OrgGroup,
+               oper_date AS OperatingDate,
+               fixed_time_section as timesection,
+               weekday AS DayOfWeek,
+               gps_online_count AS DeviceOnlineCount,
+               oper_online_count AS OperatingBusCount,
+               non_oper_online_count AS NonOperatingBusCount
+      FROM rpt_monitor_fixtimeonline
+    ]]>
+  </Query>
+</Report>

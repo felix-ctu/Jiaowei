@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<!--<script src="data/busroad.js"></script>-->
+	<script src="js/config.js"></script>
+	<script src="js/libs/jquery-3.1.1.min.js"></script>
+	<script src="js/libs/nprogress/nprogress.js"></script>
+	<script src="js/libs/toastr/toastr.min.js"></script>
+	<script src="styles/bootstrap/js/bootstrap.min.js"></script>
+	<script src="http://webapi.amap.com/maps?v=1.3&key=dafccdfaff886bb6690fc36af3b2a0cc"></script>
+	<link rel="stylesheet" href="styles/bootstrap/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="http://cache.amap.com/lbs/static/main1119.css" />
+	<link rel="stylesheet" href="styles/common.css" />
+	<link rel="stylesheet" href="js/libs/nprogress/nprogress.css" />
+	<link rel="stylesheet" href="js/libs/toastr/toastr.min.css" />
+</head>
+
+<body>
+	<div id="container"></div>
+	<script src="js/convert.js"></script>
+	<script src="js/map.js"></script>
+	<nav class="navbar navbar-default" role="navigation">
+		<div class="container-fluid">
+			<!-- Brand and toggle get grouped for better mobile display -->
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+				<a class="navbar-brand" href="#" style="font-weight:bold">公交管理</a>
+			</div>
+			<!-- Collect the nav links, forms, and other content for toggling -->
+			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+				<ul class="nav navbar-nav">
+					<li class="active eagle-eye"><a href="#">鹰眼</a></li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">测量 <span class="caret"></span></a>
+						<ul class="dropdown-menu measure" role="menu">
+							<li class="ranging"><a href="#">测量距离</a></li>
+							<li class="divider"></li>
+							<li class="area"><a href="#">区域测绘</a></li>
+							<li class="reset"><a href="#">重置</a></li>
+						</ul>
+					</li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">站点 <span class="caret"></span></a>
+						<ul class="dropdown-menu stations" role="menu">
+							<li class="bus-stop"><a href="#">显示全部</a></li>
+							<li class="bus-stop-area"><a href="#">选择区域</a></li>
+							<!--<li><a href="#">查询</a></li>-->
+							<li class="divider"></li>
+							<li class="hide-layer"><a href="#">重置</a></li>
+						</ul>
+					</li>
+				</ul>
+				<form class="navbar-form navbar-left route" role="search">
+					<div class="form-group">
+						<input id="txtRouteId" type="text" class="form-control" placeholder="公交路线（可以用英文逗号分隔路公交）">
+					</div>
+					<div class="btn-group">
+						<button id="btnSearch" type="button" class="btn btn-default">查询</button>
+						<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+							<span class="caret"></span>
+							<span class="sr-only"> </span>
+						</button>
+						<ul class="dropdown-menu" role="menu">
+							<li class="reset"><a href="#">重置</a></li>
+							<!--<li class="divider"></li>
+							<li><a href="#">隐藏路线图层</a></li>-->
+						</ul>
+					</div>
+				</form>
+			</div>
+			<!-- /.navbar-collapse -->
+		</div>
+		<!-- /.container-fluid -->
+	</nav>
+</body>
+
+</html>

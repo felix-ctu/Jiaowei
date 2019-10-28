@@ -1,0 +1,60 @@
+.amap-marker-label {
+    border: 1px solid #ccc;
+    opacity: 0.8;
+}
+
+.toolbar {
+    position: absolute;
+    left: 50px;
+    font-size: 12px;
+}
+
+.toolbar li {
+    float: left;
+    padding: 5px;
+    background-color: white;
+    opacity: 0.9;
+    border: solid 1px #ccc;
+    cursor: pointer;
+    list-style-type: none;
+    margin-left: -1px;
+}
+
+.toolbar li:hover {
+    background-color: #eee;
+}
+
+.toolbar li.selected {
+    background-color: #ddd;
+    border-bottom: 2px solid red;
+}
+
+ul.area-info {
+    position: absolute;
+    right: 10px;
+    border: solid 1px #ccc;
+    background-color: white;
+    list-style-type: none;
+    opacity: 0.9;
+    padding: 10px;
+    font-size: 12px;
+    line-height: 21px;
+}
+
+ul.area-info label {
+    display: inline-block;
+    width: 35px;
+}
+
+ul.area-info span {
+    color: darkred;
+    font-weight: bold;
+}
+
+.amap-toolbar{
+    top:60px !important;
+}
+
+.navbar-default{
+    opacity: 0.9;
+}

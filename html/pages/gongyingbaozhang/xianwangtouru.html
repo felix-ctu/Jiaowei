@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <link rel="stylesheet" href="../../bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../css/font-awesome.min.css">
+    <link rel="stylesheet" href="../../css/ionicons.min.css">
+    <link rel="stylesheet" href="../../css/AdminLTE.min.css">
+    <link rel="stylesheet" href="../../css/skins/_all-skins.min.css">
+    <link rel="stylesheet" href="../../css/bublic.css">
+    <!--[if lt IE 9]>
+    <script src="../../js/html5shiv.min.js"></script>
+    <script src="../../js/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+<div class="wrapper">
+<header class="main-header">
+    <a href="#" class="logo"><span class="logo-lg"><b>CHENG DU</b> BUS</span></a>
+    <nav class="navbar navbar-static-top">
+        <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button"></a>
+    </nav>
+</header>
+<aside class="main-sidebar">
+    <section class="sidebar">
+        <div class="user-panel">
+            <div class="pull-left image">
+                <img src="../../img/user2-160x160.jpg" class="img-circle" alt="User Image">
+            </div>
+            <div class="pull-left info">
+                <p>成都市公共交通集团</p>
+                <a href="#"><i class="fa fa-circle text-success"></i> bus在线</a>
+            </div>
+        </div>
+        <form action="#" method="get" class="sidebar-form">
+            <div class="input-group">
+                <input type="text" name="q" class="form-control" placeholder="搜索...">
+              <span class="input-group-btn">
+                <button type="submit" name="search" id="search-btn" class="btn btn-flat"><i class="fa fa-search"></i>
+                </button>
+              </span>
+            </div>
+        </form>
+        <ul class="sidebar-menu">
+            <li class="header">菜单列表</li>
+            <li class="treeview">
+                <a href="#">
+                    <i class="fa fa-dashboard"></i> <span>业务查询</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a href="../yewuchaxun/qiyeshuju.html"><i class="fa fa-circle-o"></i> 企业数据查询</a></li>
+                    <li><a href="../yewuchaxun/xianlushuju.html"><i class="fa fa-circle-o"></i>线路数据查询</a></li>
+                    <li><a href="../yewuchaxun/cheliangshuju.html"><i class="fa fa-circle-o"></i>车辆数据查询</a>
+                    <li><a href="../yewuchaxun/renyuanshuju.html"><i class="fa fa-circle-o"></i>人员数据查询</a></li>
+                    <li><a href="../yewuchaxun/zhandianshuju.html"><i class="fa fa-circle-o"></i>站点数据查询</a></li>
+                    <li><a href="../yewuchaxun/changzhanshuju.html"><i class="fa fa-circle-o"></i>场站数据查询</a></li>
+                </ul>
+            </li>
+            <li class="treeview">
+                <a href="#">
+                    <i class="fa fa-files-o"></i>
+                    <span>车辆监控</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a href="../cheliangjiankong/gisjiankong.html"><i class="fa fa-circle-o"></i> GIS监控</a></li>
+                    <li><a href="../cheliangjiankong/zaixianshuchaxun.html"><i class="fa fa-circle-o"></i>在线数历史查询</a></li>
+                    <li><a href="../cheliangjiankong/gudingshiduan.html"><i class="fa fa-circle-o"></i> 固定时段车辆在线数量</a></li>
+                    <li><a href="../cheliangjiankong/zaogaofeng.html"><i class="fa fa-circle-o"></i> 早晚高峰车辆数统计</a></li>
+                </ul>
+            </li>
+            <li class="active">
+                <a href="pages/widgets.html">
+                    <i class="fa fa-th"></i> <span>供应保障</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li class="active"><a href="xianwangtouru.html"><i class="fa fa-circle-o"></i> 线网投入分析</a></li>
+                    <li><a href="xianlutouru.html"><i class="fa fa-circle-o"></i>线路投入分析</a></li>
+                    <li><a href="cheliangliyong.html"><i class="fa fa-circle-o"></i> 车辆利用率</a></li>
+                    <li><a href="cheliangtouru.html"><i class="fa fa-circle-o"></i> 车辆投入分析</a></li>
+                    <li><a href="yunnengtouru.html"><i class="fa fa-circle-o"></i>运能投入分析</a></li>
+                    <li><a href="youxianshebei.html"><i class="fa fa-circle-o"></i>优先设施分析</a></li>
+                    <li><a href="wanrenyongyou.html"><i class="fa fa-circle-o"></i> 万人拥有公交标台数</a></li>
+                    <li><a href="keliuyuyunli.html"><i class="fa fa-circle-o"></i> 客流与运力配置</a></li>
+                </ul>
+            </li>
+            <li class="treeview">
+                <a href="#">
+                    <i class="fa fa-pie-chart"></i>
+                    <span>服务质量</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a href="#"><i class="fa fa-circle-o"></i> 首末班准点率</a></li>
+                    <li><a href="#"><i class="fa fa-circle-o"></i> 发车/收车时间分析</a></li>
+                </ul>
+            </li>
+            <li class="treeview">
+                <a href="#">
+                    <i class="fa fa-laptop"></i>
+                    <span>线网运行</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a href="#"><i class="fa fa-circle-o"></i>线网分析</a></li>
+                    <li><a href="#"><i class="fa fa-circle-o"></i>平均站距</a></li>
+                </ul>
+            </li>
+            <li class="treeview">
+                <a href="#">
+                    <i class="fa fa-edit"></i> <span>政策优惠</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a href="#"><i class="fa fa-circle-o"></i> 线路首末班刷卡数据分析</a></li>
+                    <li><a href="#"><i class="fa fa-circle-o"></i> 站点时段刷卡客流分析</a></li>
+                    <li><a href="#"><i class="fa fa-circle-o"></i>优惠分析</a></li>
+                </ul>
+            </li>
+            <li class="treeview">
+                <a href="#">
+                    <i class="fa fa-table"></i> <span>基础设施</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a href="#"><i class="fa fa-circle-o"></i> 从业人员</a></li>
+                    <li><a href="#"><i class="fa fa-circle-o"></i> 公交车辆</a></li>
+                    <li><a href="#"><i class="fa fa-circle-o"></i> 公交场站</a></li>
+                    <li><a href="#"><i class="fa fa-circle-o"></i> 公交站点</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="pages/yewuchaxun/xianlushuju.html">
+                    <i class="fa fa-calendar"></i> <span>新功能</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a href="#"><i class="fa fa-circle-o"></i>最大发车间隔保障率</a></li>
+                    <li><a href="#"><i class="fa fa-circle-o"></i>公交线路收车时间合理性</a></li>
+                    <li><a href="#"><i class="fa fa-circle-o"></i>视频监控</a></li>
+                    <li><a href="#"><i class="fa fa-circle-o"></i>电子站牌完好率</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="pages/mailbox/mailbox.html">
+                    <i class="fa fa-envelope"></i> <span>宏观分析</span>
+            <span class="pull-right-container">
+             <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a href="#"><i class="fa fa-circle-o"></i>综合指标分析</a></li>
+                </ul>
+            </li>
+        </ul>
+    </section>
+</aside>
+<!--*************右边内容部分开始**************-->
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            供应保障
+            <small>线网投入分析</small>
+        </h1>
+    </section>
+    <section class="content">
+        <div class="row">
+            <!--*********************图表内容开始***********************************-->
+            <div id="main"class="table-responsive">
+                <form class="form-inline"><b>查询范围</b>
+                    <label class="radio-inline">
+                        <input type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1">行政区域
+                    </label>
+                    <label class="radio-inline">
+                        <input type="radio" name="inlineRadioOptions" id="inlineRadio2" value="option1">城市区域
+                    </label>
+                    <div class="form-group"style="margin-left: 5px;">
+                        <label>查询月份</label>
+                        <select class="form-control">
+                            <option>2011-07</option>
+                            <option>2011-08</option>
+                        </select>
+                        <label>显示指标</label>
+                        <select class="form-control">
+                            <option>全部</option>
+                            <option>前三项</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn  btn-primary">查 询</button>
+                    <button type="submit" class="btn  btn-primary">变化趋势</button>
+                    <button type="submit" class="btn  btn-primary">导出</button>
+                    <button type="submit" class="btn  btn-primary">打印</button>
+                    <label class="checkbox-inline"style="margin-left: 50px;">
+                        <input type="checkbox" id="inlineCheckbox1" value="option1">显示报表
+                    </label>
+                </form>
+                <div style="margin-top: 3%;">
+                    <label class="checkbox-inline"style="float:right;">
+                        <input type="checkbox" id="inlineCheckbox2" value="option1">环比
+                    </label>
+                    <label class="checkbox-inline"style="float:right;margin-right: 10px;">
+                        <input type="checkbox" id="inlineCheckbox3" value="option1">同比
+                    </label>
+                    <span class="label label-info">单位：公里</span>
+                    <div id="box" style="width:100%;height: 300px;margin: 0 3%;">
+                    </div>
+                </div>
+                <table class="table table-bordered table-striped" style="width:100%;margin-top: 2%">
+                    <thead>
+                    <tr>
+                        <td>区域名称</td>
+                        <td>查询月份</td>
+                        <td>线网长度</td>
+                        <td>线路长度</td>
+                        <td>线路条数</td>
+                        <td>线路重复系数</td>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>武侯区</td>
+                        <td>2011-08</td>
+                        <td>577.6</td>
+                        <td>1239.56</td>
+                        <td>97</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>青羊区</td>
+                        <td>2011-08</td>
+                        <td>577.6</td>
+                        <td>1239.56</td>
+                        <td>97</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>龙泉驿区</td>
+                        <td>2011-08</td>
+                        <td>577.6</td>
+                        <td>1239.56</td>
+                        <td>97</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>温江区</td>
+                        <td>2011-08</td>
+                        <td>577.6</td>
+                        <td>1239.56</td>
+                        <td>97</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>金牛区</td>
+                        <td>2011-08</td>
+                        <td>577.6</td>
+                        <td>1239.56</td>
+                        <td>97</td>
+                        <td></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!--*********************图表内容结束***********************************-->
+        </div>
+    </section>
+</div>
+<!--*************右边内容部分结束**************-->
+<!--*************页脚部分开始**************-->
+<footer class="main-footer">
+    <div class="pull-right hidden-xs">
+        <b>Version</b> 2.3.6
+    </div>
+    <strong>Copyright &copy; 2014-2016 <a href="http://almsaeedstudio.com">Almsaeed Studio</a>.</strong> All rights
+    reserved.
+</footer>
+<!--*************页脚部分结束**************-->
+</div>
+</body>
+<script src="../../js/jquery-1.11.3.min.js"></script>
+<script src="../../echarts/echarts.min.js"></script>
+<script src="../../echarts/macarons.js"></script>
+<script src="../../js/jquery-ui.min.js"></script>
+<script src="../../bootstrap/js/bootstrap.min.js"></script>
+<script src="../../js/raphael-min.js"></script>
+<script src="../../js/app.min.js"></script>
+<script src="../../js/pages/dashboard.js"></script>
+<script src="../../js/demo.js"></script>
+<script type="text/javascript">
+    var myChart = echarts.init(document.getElementById('box'),'macarons');
+    option = {
+        tooltip : {
+            trigger: 'axis',
+            axisPointer : {            // 坐标轴指示器，坐标轴触发有效
+                type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+            }
+        },
+        legend: {
+            data:['2011-08','2013-09','2012-06']
+        },
+        grid: {
+            left: '0',
+            top:'3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+        },
+        xAxis : [
+            {
+                type : 'category',
+                data : ['武侯区','锦江区','青羊区','金牛区','成华区','龙泉驿','温江区','双流县','中心城区']
+            }
+        ],
+        yAxis : [
+            {
+                type : 'value'
+            }
+        ],
+        series : [
+            {
+                name:'2011-08',
+                type:'bar',
+                data:[300, 400, 100, 200, 370, 330, 320,500,200]
+            },
+            {
+                name:'2013-09',
+                type:'bar',
+                data:[100,300,200,100,370,180,220,250,100]
+            },
+            {
+                name:'2012-06',
+                type:'bar',
+                data:[120, 182, 121, 234, 290, 130, 310,250,120]
+            }
+        ]
+    };
+    myChart.setOption(option);
+    $.widget.bridge('uibutton', $.ui.button);
+</script>
+</html>

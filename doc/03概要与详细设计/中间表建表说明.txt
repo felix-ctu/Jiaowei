@@ -1,0 +1,69 @@
+﻿rpt_busiquery_corp   			企业数据查询
+rpt_busiquery_route				线路数据查询
+	rpt_busiquery_route_smzd  		首末站点
+	rpt_busiquery_route_tjzd		途径站点
+	rpt_busiquery_route_yycl		运营车辆
+	rpt_busiquery_route_kcry		可乘人员
+	rpt_busiquery_route_fdhf		峰段划分
+	rpt_busiquery_route_xsbz		限速标准
+rpt_busiquery_businfo			车辆数据查询
+rpt_busiquery_emp				人员数据查询
+rpt_busiquery_station			站点数据查询
+rpt_busiquery_site				场站数据查询
+rpt_busiquery_plan				运营计划查询
+rpt_busiquery_arrangework		配车排班查询
+rpt_busiquery_displan			发车计划查询
+rpt_busiquery_runrecord			发车记录查询
+rpt_busiquery_arrlft			到离站数据查询
+rpt_busiquery_violation			车辆违规查询
+
+rpt_macro_cia            		Comprehensive index analysis(综合指标分析)
+	rpt_macro_cia_bus_inst        	综合指标分析之公交设施
+	rpt_macro_cia_bus_invest		综合指标分析之车辆投入
+	rpt_macro_cia_cap_invest		综合指标分析之运力投入
+	rpt_macro_cia_sve_quty			综合指标分析之服务质量
+	rpt_macro_cia_bus_income		综合指标分析之公交收入and客流分析
+	
+map_code_master					代码映射表
+map_org_regional                区域类型与组织映射表
+
+--rpt_splysecu_netinvest			供应保障-线网投入
+rpt_splysecu_routeinvest		供应保障-线路投入
+rpt_splysecu_busutilization		供应保障-车辆利用率
+rpt_splysecu_businvest			供应保障-车辆投入
+rpt_splysecu_capacity_invest	供应保障-运能投入
+rpt_splysecu_piorfacility		供应保障-优先设施分析
+rpt_splysecu_stdcoeffby10th		供应保障-万人拥有公交标台数
+rpt_splysecu_passflowtocap		供应保障-客流与运力配置分析
+
+rpt_svcquality_flontime			服务质量-首末班准点率
+rpt_svcquality_depcls			服务质量-发车收车时间分析
+rpt_svcquality_depinterval		服务质量-发车间隔保障分析
+rpt_svcquality_clsrationality	服务质量-收车时间合理性分析
+
+rpt_netoper_netanalysis			线网运行-线网分析
+rpt_netoper_avgdistance			线网运行-平均站距
+
+rpt_policyprefer_flcard			政策优惠-线路首末班刷卡
+rpt_policyprefer_passflow		政策优惠-站点时段刷卡客流分析
+rpt_policyprefer_preferential	       政策优惠-优惠分析
+
+rpt_infra_employee				基础设施-从业人员
+rpt_infra_bus					基础设施-公交车辆
+rpt_infra_site					基础设施-公交场站
+rpt_infra_station				基础设施-公交站点
+
+rpt_monitor_gis					车辆监控-GIS监控
+rpt_monitor_onlinedata          车辆监控-在线历史数查询
+rpt_monitor_fixtimeonline       车辆监控-固定时段车辆在线数量
+rpt_monitor_ampmpeak            车辆监控-早晚高峰车辆数统计
+
+
+
+
+
+
+
+**1. 中间表数据尽量直接，比如性别，1=男，2=女，在中间表只显示男女，逻辑尽量在存储过程中处理，如字段有特殊逻辑需求（或计算公式），请说明。
+**2. 代码映射表尽量在存储过程中使用
+**3. 建中间表，无需创建主键，可创建索引

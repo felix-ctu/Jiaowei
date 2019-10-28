@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <link rel="stylesheet" href="../../bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../css/font-awesome.min.css">
+    <link rel="stylesheet" href="../../css/ionicons.min.css">
+    <link rel="stylesheet" href="../../css/AdminLTE.min.css">
+    <link rel="stylesheet" href="../../css/skins/_all-skins.min.css">
+    <link rel="stylesheet" href="../../css/bublic.css">
+    <!--[if lt IE 9]>
+    <script src="../../js/html5shiv.min.js"></script>
+    <script src="../../js/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+<div class="wrapper">
+<header class="main-header">
+    <a href="#" class="logo"><span class="logo-lg"><b>CHENG DU</b> BUS</span></a>
+    <nav class="navbar navbar-static-top">
+        <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button"></a>
+    </nav>
+</header>
+<aside class="main-sidebar">
+    <section class="sidebar">
+        <div class="user-panel">
+            <div class="pull-left image">
+                <img src="../../img/user2-160x160.jpg" class="img-circle" alt="User Image">
+            </div>
+            <div class="pull-left info">
+                <p>成都市公共交通集团</p>
+                <a href="#"><i class="fa fa-circle text-success"></i> bus在线</a>
+            </div>
+        </div>
+        <form action="#" method="get" class="sidebar-form">
+            <div class="input-group">
+                <input type="text" name="q" class="form-control" placeholder="搜索...">
+              <span class="input-group-btn">
+                <button type="submit" name="search" id="search-btn" class="btn btn-flat"><i class="fa fa-search"></i>
+                </button>
+              </span>
+            </div>
+        </form>
+        <ul class="sidebar-menu">
+            <li class="header">菜单列表</li>
+            <li class="treeview">
+                <a href="#">
+                    <i class="fa fa-dashboard"></i> <span>业务查询</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a href="../yewuchaxun/qiyeshuju.html"><i class="fa fa-circle-o"></i> 企业数据查询</a></li>
+                    <li><a href="../yewuchaxun/xianlushuju.html"><i class="fa fa-circle-o"></i>线路数据查询</a></li>
+                    <li><a href="../yewuchaxun/cheliangshuju.html"><i class="fa fa-circle-o"></i>车辆数据查询</a>
+                    <li><a href="../yewuchaxun/renyuanshuju.html"><i class="fa fa-circle-o"></i>人员数据查询</a></li>
+                    <li><a href="../yewuchaxun/zhandianshuju.html"><i class="fa fa-circle-o"></i>站点数据查询</a></li>
+                    <li><a href="../yewuchaxun/changzhanshuju.html"><i class="fa fa-circle-o"></i>场站数据查询</a></li>
+                </ul>
+            </li>
+            <li class="treeview">
+                <a href="#">
+                    <i class="fa fa-files-o"></i>
+                    <span>车辆监控</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a href="../cheliangjiankong/gisjiankong.html"><i class="fa fa-circle-o"></i> GIS监控</a></li>
+                    <li><a href="../cheliangjiankong/zaixianshuchaxun.html"><i class="fa fa-circle-o"></i>在线数历史查询</a></li>
+                    <li><a href="../cheliangjiankong/gudingshiduan.html"><i class="fa fa-circle-o"></i> 固定时段车辆在线数量</a></li>
+                    <li><a href="../cheliangjiankong/zaogaofeng.html"><i class="fa fa-circle-o"></i> 早晚高峰车辆数统计</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="pages/widgets.html">
+                    <i class="fa fa-th"></i> <span>供应保障</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a href="../gongyingbaozhang/xianwangtouru.html"><i class="fa fa-circle-o"></i> 线网投入分析</a></li>
+                    <li><a href="../gongyingbaozhang/xianlutouru.html"><i class="fa fa-circle-o"></i>线路投入分析</a></li>
+                    <li><a href="../gongyingbaozhang/cheliangliyong.html"><i class="fa fa-circle-o"></i> 车辆利用率</a></li>
+                    <li><a href="../gongyingbaozhang/cheliangtouru.html"><i class="fa fa-circle-o"></i> 车辆投入分析</a></li>
+                    <li><a href="../gongyingbaozhang/yunnengtouru.html"><i class="fa fa-circle-o"></i>运能投入分析</a></li>
+                    <li><a href="../gongyingbaozhang/youxianshebei.html"><i class="fa fa-circle-o"></i>优先设施分析</a></li>
+                    <li><a href="../gongyingbaozhang/wanrenyongyou.html"><i class="fa fa-circle-o"></i> 万人拥有公交标台数</a></li>
+                    <li><a href="../gongyingbaozhang/keliuyuyunli.html"><i class="fa fa-circle-o"></i> 客流与运力配置</a></li>
+                </ul>
+            </li>
+            <li class="treeview">
+                <a href="#">
+                    <i class="fa fa-pie-chart"></i>
+                    <span>服务质量</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a href="../fuwuzhiliang/shoumoban.html"><i class="fa fa-circle-o"></i> 首末班准点率</a></li>
+                    <li><a href="../fuwuzhiliang/facheshouche.html"><i class="fa fa-circle-o"></i> 发车/收车时间分析</a></li>
+                </ul>
+            </li>
+            <li class="treeview">
+                <a href="#">
+                    <i class="fa fa-laptop"></i>
+                    <span>线网运行</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a href="../xianwangyunxing/xianwangfenxi.html"><i class="fa fa-circle-o"></i>线网分析</a></li>
+                    <li><a href="../xianwangyunxing/pingjunzhanju.html"><i class="fa fa-circle-o"></i>平均站距</a></li>
+                </ul>
+            </li>
+            <li class="treeview">
+                <a href="#">
+                    <i class="fa fa-edit"></i> <span>政策优惠</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a href="../zhengceyouhui/xianlushoumoban.html"><i class="fa fa-circle-o"></i> 线路首末班刷卡数据分析</a></li>
+                    <li><a href="../zhengceyouhui/zhandianshiduan.html"><i class="fa fa-circle-o"></i> 站点时段刷卡客流分析</a></li>
+                    <li><a href="../zhengceyouhui/youhuifenxi.html"><i class="fa fa-circle-o"></i>优惠分析</a></li>
+                </ul>
+            </li>
+            <li class="treeview active">
+                <a href="#">
+                    <i class="fa fa-table"></i> <span>基础设施</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a href="congyerenyuan.html"><i class="fa fa-circle-o"></i> 从业人员</a></li>
+                    <li><a href="gongjiaocheliang.html"><i class="fa fa-circle-o"></i> 公交车辆</a></li>
+                    <li><a href="gongjiaochangzhan.html"><i class="fa fa-circle-o"></i> 公交场站</a></li>
+                    <li class="active"><a href="gongjiaozhandian.html"><i class="fa fa-circle-o"></i> 公交站点</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="pages/yewuchaxun/xianlushuju.html">
+                    <i class="fa fa-calendar"></i> <span>新功能</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a href="#"><i class="fa fa-circle-o"></i>最大发车间隔保障率</a></li>
+                    <li><a href="#"><i class="fa fa-circle-o"></i>公交线路收车时间合理性</a></li>
+                    <li><a href="#"><i class="fa fa-circle-o"></i>视频监控</a></li>
+                    <li><a href="#"><i class="fa fa-circle-o"></i>电子站牌完好率</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="pages/mailbox/mailbox.html">
+                    <i class="fa fa-envelope"></i> <span>宏观分析</span>
+            <span class="pull-right-container">
+             <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a href="#"><i class="fa fa-circle-o"></i>综合指标分析</a></li>
+                </ul>
+            </li>
+        </ul>
+    </section>
+</aside>
+<!--*************右边内容部分开始**************-->
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            基础设备
+            <small>公交站点</small>
+        </h1>
+    </section>
+    <section class="content">
+        <div class="row">
+            <!--*********************图表内容开始***********************************-->
+            <div id="main"class="table-responsive">
+                <form class="form-inline"><b>查询范围</b>
+                    <label class="radio-inline">
+                        <input type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1">行政区域
+                    </label>
+                    <label class="radio-inline">
+                        <input type="radio" name="inlineRadioOptions" id="inlineRadio2" value="option1">城市区域
+                    </label>
+                    <div class="form-group"style="margin-left: 5px;">
+                        <label>查询月份</label>
+                        <select class="form-control">
+                            <option>2011-07</option>
+                            <option>2011-08</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn  btn-primary">查 询</button>
+                    <button type="submit" class="btn  btn-primary">变化趋势</button>
+                    <button type="submit" class="btn  btn-primary">导出</button>
+                    <button type="submit" class="btn  btn-primary">打印</button>
+                    <label class="checkbox-inline"style="margin-left: 50px;">
+                        <input type="checkbox" id="inlineCheckbox1" value="option1">显示报表
+                    </label>
+                </form>
+                <div style="margin-top: 3%;">
+                    <div id="box" style="float:left;width:1200px;height: 300px;"></div>
+                </div>
+            </div>
+            <table class="table table-bordered table-striped" style="width:1100px;margin:0 2%">
+                <thead>
+                <tr>
+                    <td>行政区域</td>
+                    <td>月份</td>
+                    <td>场站数量</td>
+                    <td>场站面积</td>
+                    <td>场站停车能力</td>
+                    <td>场站需求能力</td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>合计</td>
+                    <td>2013-07</td>
+                    <td>0</td>
+                    <td>0.00</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <!--*********************图表内容结束***********************************-->
+</div>
+</section>
+</div>
+<!--*************右边内容部分结束**************-->
+<!--*************页脚部分开始**************-->
+<footer class="main-footer">
+    <div class="pull-right hidden-xs">
+        <b>Version</b> 2.3.6
+    </div>
+    <strong>Copyright &copy; 2014-2016 <a href="http://almsaeedstudio.com">Almsaeed Studio</a>.</strong> All rights
+    reserved.
+</footer>
+<!--*************页脚部分结束**************-->
+</div>
+</body>
+<script src="../../js/jquery-1.11.3.min.js"></script>
+<script src="../../echarts/echarts.min.js"></script>
+<script src="../../echarts/macarons.js"></script>
+<script src="../../js/jquery-ui.min.js"></script>
+<script src="../../bootstrap/js/bootstrap.min.js"></script>
+<script src="../../js/raphael-min.js"></script>
+<script src="../../js/app.min.js"></script>
+<script src="../../js/pages/dashboard.js"></script>
+<script src="../../js/demo.js"></script>
+<script type="text/javascript">
+    var myChart = echarts.init(document.getElementById('box'),'macarons');
+    option = {
+        tooltip: {
+            trigger: 'axis'
+        },
+        toolbox: {
+            feature: {
+                dataView: {show: true, readOnly: false},
+                magicType: {show: true, type: [ 'line']},
+                restore: {show: true},
+                saveAsImage: {show: true}
+            }
+        },
+        legend: {
+            data:['锦江区','金牛区','青羊区','武侯区','成华区']
+        },
+        xAxis: [
+            {
+                type: 'category',
+                data: ['2013-04']
+            }
+        ],
+        yAxis: [
+            {
+                type: 'value',
+                name: '站点数',
+                axisLabel: {
+                    formatter: '{value}'
+                }
+            }
+        ],
+        series: [
+            {
+                name:'锦江区',
+                type:'line',
+                data:[350]
+            },
+            {
+                name:'金牛区',
+                type:'line',
+                data:[400]
+            },
+            {
+                name:'青羊区',
+                type:'line',
+                data:[450]
+            },
+            {
+                name:'武侯区',
+                type:'line',
+                data:[500]
+            },
+            {
+                name:'成华区',
+                type:'line',
+                data:[550]
+            }
+        ]
+    };
+    myChart.setOption(option);
+    $.widget.bridge('uibutton', $.ui.button);
+</script>
+</html>

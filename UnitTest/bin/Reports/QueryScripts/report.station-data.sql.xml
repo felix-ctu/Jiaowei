@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query>
+    <![CDATA[
+    select
+    ROWNUM as Sequence,
+    STATION_ID as StationID,
+    STATION_NAME as StationName,
+    Electronic_board as ElectronicBoard,
+    Shelter as Shelter,
+    Harbor_shaped as HarborShaped,
+    Length ,
+    Routes,
+    Longitude,
+    Latitude,
+    Area_code as AREACODE,
+    row_number() over (order by ROWNUM) as RowNumber,
+    count(*) over () as TotalItems
+    from RPT_BUSIQUERY_STATION
+    ]]>
+  </Query>
+</Report>

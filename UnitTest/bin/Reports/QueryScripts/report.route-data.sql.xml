@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="route-list">
+    <![CDATA[
+      SELECT sub_route_id AS SubRouteId,
+               route_id AS RouteId,
+               route_name AS RouteName,
+               bus_count AS BusCount,
+               begin_date AS BeginDate,
+               end_date AS EndDate,
+               linkman AS Linkman,
+               route_grade AS RouteGrade,
+               org_id AS OrgId,
+               parent_org_id AS ParentOrgId,
+               area_code AS AreaCode,
+               route_type AS RouteType,
+               isactive AS IsActive,
+               is_end_with_alphabet AS IsEndWithAlphabet,
+               is_suburban AS IsSuburban,
+               org_name as OrgName,
+               org_group as orggroupname,
+               route_length as RouteLength,
+               row_number() over (order by route_id) as RowNumber,
+               count(*) over () as TotalItems,
+               sum(bus_count) over () as TotalSumbus_count
+      FROM rpt_busiquery_route
+    ]]>
+  </Query>
+  <Query name="route-segment">
+    <![CDATA[
+      SELECT route_id AS RouteId,
+               sn AS StationSerialNumber,
+               segment_name AS SegmentName,
+               station_no AS StationNumber,
+               station_name AS StationName,
+               station_type AS StationType,
+               electronic_board AS HasEleBoard,
+               shelter AS HasBusShelter,
+               harbor_shaped AS IsHarborShaped,
+               station_length AS StationLength,
+               region_area AS RegionArea,
+               area_code AS AreaCode,
+               single_serial_id AS SingleSerialId,
+               dual_serial_id AS DualSerialId,
+               longitude AS Longitude,
+               latitude AS Latitude
+      FROM rpt_busiquery_route_tjzd
+    ]]>
+  </Query>
+  <Query name="route-terminalstation">
+    <![CDATA[
+      SELECT sn AS SN,
+               route_id AS RouteId,
+               segment_name AS SegmentName,
+               fst_station AS FirstStationName,
+               lst_station AS LastStationName,
+               isactive AS IsActive
+      FROM rpt_busiquery_route_smzd
+    ]]>
+  </Query>
+  <Query name="route-peakinfo">
+    <![CDATA[
+      SELECT id AS Id,
+ 
+      route_id AS RouteId,
+
+      name AS Name,
+ 
+      (CASE week_start WHEN '1' THEN '周一' WHEN '2' THEN '周二' WHEN '3' THEN '周三' WHEN '4' THEN '周四' WHEN '5' THEN '周五' WHEN '6' THEN '周六' WHEN '7' THEN '周日' ELSE '' END) AS       WeekStart,
+       
+    (CASE week_end WHEN '1' THEN '周一' WHEN '2' THEN '周二' WHEN '3' THEN '周三' WHEN '4' THEN '周四' WHEN '5' THEN '周五' WHEN '6' THEN '周六' WHEN '7' THEN '周日' ELSE '' END) AS WeekEnd,
+    
+    (CASE floor((nvl(start_time,0)-floor(start_time))*60) WHEN 0 THEN CONCAT(to_char(floor(start_time)),':00') ELSE CONCAT(to_char(floor(start_time)),CONCAT(':',to_char(floor((nvl(start_time,0)-floor(start_time))*60)))) END) AS StartTime,
+    (CASE floor((nvl(end_time,0)-floor(end_time))*60) WHEN 0 THEN CONCAT(to_char(floor(end_time)),':00') ELSE CONCAT(to_char(floor(end_time)),CONCAT(':',to_char(floor((nvl(end_time,0)-floor(end_time))*60)))) END) AS EndTime,
+      
+    departure_interval AS DepartureInterval,
+
+       turnaround_time AS TurnaroundTime
+    FROM rpt_busiquery_route_fdhf
+    ]]>
+  </Query>
+  <Query name="route-speedlimit">
+    <![CDATA[
+      SELECT sn AS SN,
+               route_id AS RouteId,
+               effective_date AS EffectiveDate,
+               expire_date AS ExpireDate,
+               start_section AS StartSection,
+               end_section AS EndSection,
+               begin_time AS BeginTime,
+               end_time AS EndTime,
+               max_limit_speed AS MaxLimitSpeed,
+               min_limit_speed AS MinLimitSpeed
+      FROM rpt_busiquery_route_xsbz
+    ]]>
+  </Query>
+</Report>

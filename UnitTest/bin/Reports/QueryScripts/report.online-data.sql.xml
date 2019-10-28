@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="online-data">
+    <![CDATA[
+      SELECT oper_datetime AS Time,
+               operating_bus_count AS OperatingBusCount,
+               non_operating_bus_count AS NonOperatingBusCount,
+               all_bus_count AS AllBusCount,
+               operating_bus_online_rate AS OperatingBusOnlineRate
+      FROM rpt_monitor_onlinedata
+    ]]>
+  </Query>
+</Report>

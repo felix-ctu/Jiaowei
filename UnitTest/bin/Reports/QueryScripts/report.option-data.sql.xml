@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="option-route">
+    <![CDATA[
+       SELECT DISTINCT
+               '' AS CodeSequence,
+               ROUTE_NAME AS CodeName, 
+               ROUTE_ID as CodeValue,
+               ORG_GROUP_ID AS OrgID,
+               AREA_CODE AS AreaCode,
+               ROUTE_GRADE AS RouteGrade
+       FROM RPT_BUSIQUERY_ROUTE 
+       ORDER BY CodeValue
+  ]]>
+  </Query>
+  <Query name="option-area">
+    <![CDATA[
+      SELECT code_seq as CodeSequence,
+              code_desc as CodeName,
+              code_value as CodeValue
+      FROM RPT_CODE_MASTER
+      WHERE code_category = 'AREA_CODE'
+      ORDER BY TO_NUMBER(CodeSequence)
+  ]]>
+  </Query>
+  <Query name="option-organization">
+    <![CDATA[
+      SELECT orgname as CodeName,
+                orgid as CodeValue,
+                regional_category as ParentCode
+      FROM rpt_ORG_REGIONAL
+  ]]>
+  </Query>
+  <Query name="option-routegrade">
+    <![CDATA[
+      SELECT code_seq as CodeSequence,
+              code_desc as CodeName,
+              code_value as CodeValue
+      FROM RPT_CODE_MASTER
+      WHERE code_category = 'ROUTEGRADE'
+      ORDER BY TO_NUMBER(CodeSequence)
+  ]]>
+  </Query>
+  <Query name="option-position">
+    <![CDATA[
+      SELECT code_seq as CodeSequence,
+              code_desc as CodeName,
+              code_value as CodeValue
+      FROM RPT_CODE_MASTER
+      WHERE code_category = 'POSITIONTYPE'
+      ORDER BY TO_NUMBER(CodeSequence)
+  ]]>
+  </Query>
+  <Query name="option-gender">
+    <![CDATA[
+      SELECT code_seq as CodeSequence,
+              code_desc as CodeName,
+              code_value as CodeValue
+      FROM RPT_CODE_MASTER
+      WHERE code_category = 'SEX'
+      ORDER BY TO_NUMBER(CodeSequence)
+  ]]>
+  </Query>
+  <Query name="option-routetype">
+    <![CDATA[
+      SELECT code_seq as CodeSequence,
+              code_desc as CodeName,
+              code_value as CodeValue
+      FROM RPT_CODE_MASTER
+      WHERE code_category = 'ROUTETYPE'
+      ORDER BY TO_NUMBER(CodeSequence)
+  ]]>
+  </Query>
+  <Query name="option-busstatus">
+    <![CDATA[
+      SELECT  distinct 
+      '' AS CodeSequence,
+      bus_status AS CodeName,
+      bus_status As CodeValue
+      from rpt_busiquery_businfo where bus_status is not null
+       ORDER BY CodeValue
+  ]]>
+  </Query>
+  <Query name="option-querymonth">
+    <![CDATA[
+    select '' AS CodeSequence, to_char(sysdate,'yyyy-mm') As CodeName, to_char(sysdate,'yyyy-mm') As CodeValue  from dual
+    union
+    select '' AS CodeSequence, to_char(Add_months(sysdate,-1),'yyyy-mm') as CodeName, to_char(Add_months(sysdate,-1),'yyyy-mm') as CodeValue  from dual
+    union
+    select '' AS CodeSequence, to_char(Add_months(sysdate,-2),'yyyy-mm') as CodeName,  to_char(Add_months(sysdate,-2),'yyyy-mm') as CodeName  from dual
+    ]]>
+  </Query>
+  <Query name="option-planname">
+    <![CDATA[
+      SELECT  distinct 
+      '' AS CodeSequence,
+      plan_name AS CodeName,
+      plan_name As CodeValue
+      from rpt_busiquery_plan
+      ORDER BY CodeValue
+  ]]>
+  </Query>
+  <Query name="option-poptype">
+    <![CDATA[
+      SELECT code_seq as CodeSequence,
+              code_desc as CodeName,
+              code_value as CodeValue
+      FROM RPT_CODE_MASTER
+      WHERE code_category = 'POPULATIONTYPE'
+      ORDER BY TO_NUMBER(CodeSequence)
+  ]]>
+  </Query>
+  <Query name="option-sitetype">
+    <![CDATA[
+       SELECT code_seq as CodeSequence,
+              code_desc as CodeName,
+              code_value as CodeValue
+      FROM RPT_CODE_MASTER
+      WHERE code_category = 'SITETYPE'
+      ORDER BY TO_NUMBER(CodeSequence)
+  ]]>
+  </Query>
+  <Query name="option-time-section">
+    <![CDATA[
+      select distinct '' AS CodeSequence,
+      t.time_section AS CodeName, 
+      t.time_section As CodeValue 
+      from rpt_policyprefer_passflow t 
+      order by CodeValue
+  ]]>
+  </Query>
+   <Query name="option-time-section-capa">
+    <![CDATA[
+      select distinct '' AS CodeSequence,
+      time_section AS CodeName, 
+      time_section As CodeValue 
+      from RPT_SPLYSECU_PASSFLOWTOCAP 
+      order by CodeValue
+  ]]>
+  </Query>
+  <Query name="option-sitetype-sitedata">
+    <![CDATA[
+       select distinct '' AS CodeSequence,
+      site_type AS CodeName, 
+      site_type As CodeValue 
+      from rpt_busiquery_site
+      order by CodeValue
+  ]]>
+  </Query>
+  <Query name="option-time-section-avg-interval">
+    <![CDATA[
+      select distinct '' AS CodeSequence,
+      time_section AS CodeName, 
+      time_section As CodeValue 
+      from rpt_svcquality_avginterval
+      order by CodeValue
+  ]]>
+  </Query>
+  
+    <Query name="option-dire-section-avg-interval">
+    <![CDATA[
+      select distinct '' AS CodeSequence,
+      run_direction AS CodeName, 
+      run_direction As CodeValue 
+      from rpt_svcquality_avginterval
+      order by CodeValue
+  ]]>
+  </Query>
+
+  <Query name="option-busoil">
+    <![CDATA[
+      select distinct '' AS CodeSequence,
+      oil_type AS CodeName, 
+      oil_type As CodeValue 
+      from rpt_busiquery_businfo
+      order by CodeValue
+  ]]>
+  </Query>
+  
+</Report>

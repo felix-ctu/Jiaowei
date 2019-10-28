@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="capaanalyze-data">
+    <![CDATA[
+      SELECT   
+          OPER_DATE      as searchdate,
+          TIME_SECTION    as searchtime,
+          ROUTE_NAME        as routename,
+          ROUTE_ID         as routeid,
+          OPER_CAP        as opercap,
+          PASSENGER_FLOW    as passflow,
+          RATIO          as ratio,
+        AREA_CODE              as areacode,
+        ORG_GROUP           as  orgname, 
+        ORG_GROUP_ID         as orgid,
+        row_number() over (order by TIME_SECTION ) as RowsectionNumber
+      FROM RPT_SPLYSECU_PASSFLOWTOCAP
+    ]]>
+  </Query>
+</Report>

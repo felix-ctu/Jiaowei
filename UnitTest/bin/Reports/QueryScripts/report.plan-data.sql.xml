@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="bus-info">
+    <![CDATA[
+      SELECT  ROWNUM AS Sequence,
+              parent_org_id AS ParentOrgId,
+              org_id AS OrgId,
+              org_group AS OrgGroup,
+              route_id AS RouteId,
+              plan_name AS PlanName,
+              class_number AS ClassNumber,
+              class_type AS ClassType,
+              train_number AS TrainNumber,
+              fst_station AS FstStation,
+              lst_station AS LstStation,
+              start_time AS StartTime,
+              end_time AS EndTime,
+              operation_mileage AS OperationMileage,
+              operation_time AS OperationTime,
+              row_number() over (order by ROWNUM) as RowNumber,
+              count(*) over () as TotalItems
+      FROM rpt_busiquery_plan
+    ]]>
+  </Query>
+</Report>

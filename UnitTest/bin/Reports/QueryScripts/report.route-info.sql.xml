@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="route-info">
+    <![CDATA[
+      SELECT 
+      OP_DATE			as searchdate,
+	    ROUTE_ID			as routeid,
+      ROUTE_NAME    as routename,
+	    PLAN_DIS_COUNT			as plancount,	
+	    ACT_DIS_COUNT		as actcount,	
+	    BUS_COUNT			as buscount,
+	    OP_MILE			as opmile,
+	    PASSFLOW			  as passflows,
+      FIRST_DISPATCH   as firsttime,
+      LAST_DISPATCH     as lasttime,
+      FL_ONTIME_RATIO   as flratio,
+      ROUTE_ONTIME_RATIO as routeratio,
+      OP_QTY  as opqty,
+	    AREA_CODE				as areacode,
+	    ORG_GROUP				as orgname,
+	    ORG_GROUP_ID		as orgid,
+      row_number() over (order by ROUTE_ID) as RowNumber,
+      count(*) over () as TotalItems,
+      sum(op_mile) over () as TotalSumOpmile,
+      avg(op_mile) over () as TotalAverageOpmile,
+      sum(PASSFLOW) over () as TotalSumPassflows,
+      avg(PASSFLOW) over () as TotalAveragePassflows
+      FROM rpt_route_info_tmp
+    
+    ]]>
+  </Query>
+</Report>

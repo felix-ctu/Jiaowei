@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="bussitelist-data">
+    <![CDATA[
+      SELECT 	
+	      YEARMONTH		as searchdate,
+	      SITE_COUNT		as sitecount,	
+	      SITE_SQUARE		as sitesqu,	
+	      SITE_VOLUME		 as sitevol,		
+	      DEMAND_ABLITY		 as demand,
+	      AREA_CODE			  as areacode,
+	      ORG_GROUP 				as orgname,
+	      ORG_GROUP_ID 		  as orgid
+        
+      FROM RPT_INFRA_SITE
+    ]]>
+  </Query>
+</Report>

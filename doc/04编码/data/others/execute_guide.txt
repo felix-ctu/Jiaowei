@@ -1,0 +1,81 @@
+/*
+create public database link bus_dblink connect to wiseract identified by wiseract
+using '(DESCRIPTION=
+  (ADDRESS_LIST = 
+  (ADDRESS = (PROTOCOL = TCP)(HOST = 200625bf.nat123.net)(PORT = 20074))
+  )
+  (CONNECT_DATA = 
+  (SERVICE_NAME = bus)
+  )
+  )';
+*/  
+--公网数据库重建脚本
+drop table RPT_BUSIQUERY_BUSINFO;
+drop table RPT_BUSIQUERY_CORP;
+drop table RPT_BUSIQUERY_EMP;
+drop table RPT_BUSIQUERY_ROUTE;
+drop table RPT_BUSIQUERY_ROUTE_FDHF;
+drop table RPT_BUSIQUERY_ROUTE_SMZD;
+drop table RPT_BUSIQUERY_ROUTE_TJZD;
+drop table RPT_BUSIQUERY_ROUTE_XSBZ;
+drop table RPT_BUSIQUERY_SITE;
+drop table RPT_BUSIQUERY_STATION;
+drop table RPT_MACRO_CIA_BUS_INCOME;
+drop table RPT_MACRO_CIA_BUS_INST;
+drop table RPT_MACRO_CIA_BUS_INVEST;
+drop table RPT_MACRO_CIA_CAP_INVEST;
+drop table RPT_MACRO_CIA_PSG_FLOW;
+drop table RPT_MACRO_CIA_SVE_QUTY;
+create table RPT_BUSIQUERY_BUSINFO as select * from RPT_BUSIQUERY_BUSINFO@BUS_DBLINK;
+create table RPT_BUSIQUERY_CORP as select * from RPT_BUSIQUERY_CORP@BUS_DBLINK;
+create table RPT_BUSIQUERY_EMP as select * from RPT_BUSIQUERY_EMP@BUS_DBLINK;
+create table RPT_BUSIQUERY_ROUTE as select * from RPT_BUSIQUERY_ROUTE@BUS_DBLINK;
+create table RPT_BUSIQUERY_ROUTE_FDHF as select * from RPT_BUSIQUERY_ROUTE_FDHF@BUS_DBLINK;
+create table RPT_BUSIQUERY_ROUTE_SMZD as select * from RPT_BUSIQUERY_ROUTE_SMZD@BUS_DBLINK;
+create table RPT_BUSIQUERY_ROUTE_TJZD as select * from RPT_BUSIQUERY_ROUTE_TJZD@BUS_DBLINK;
+create table RPT_BUSIQUERY_ROUTE_XSBZ as select * from RPT_BUSIQUERY_ROUTE_XSBZ@BUS_DBLINK;
+create table RPT_BUSIQUERY_SITE as select * from RPT_BUSIQUERY_SITE@BUS_DBLINK;
+create table RPT_BUSIQUERY_STATION as select * from RPT_BUSIQUERY_STATION@BUS_DBLINK;
+create table RPT_MACRO_CIA_BUS_INCOME as select * from RPT_MACRO_CIA_BUS_INCOME@BUS_DBLINK;
+create table RPT_MACRO_CIA_BUS_INST as select * from RPT_MACRO_CIA_BUS_INST@BUS_DBLINK;
+create table RPT_MACRO_CIA_BUS_INVEST as select * from RPT_MACRO_CIA_BUS_INVEST@BUS_DBLINK;
+create table RPT_MACRO_CIA_CAP_INVEST as select * from RPT_MACRO_CIA_CAP_INVEST@BUS_DBLINK;
+create table RPT_MACRO_CIA_PSG_FLOW as select * from RPT_MACRO_CIA_PSG_FLOW@BUS_DBLINK;
+create table RPT_MACRO_CIA_SVE_QUTY as select * from RPT_MACRO_CIA_SVE_QUTY@BUS_DBLINK;
+--
+drop table RPT_MONITOR_ONLINEDATA;
+drop table RPT_MONITOR_AMPMPEAK;
+drop table RPT_MONITOR_FIXTIMEONLINE;
+drop table RPT_MONITOR_GIS;
+create table RPT_MONITOR_ONLINEDATA as select * from RPT_MONITOR_ONLINEDATA@BUS_DBLINK;
+create table RPT_MONITOR_AMPMPEAK as select * from RPT_MONITOR_AMPMPEAK@BUS_DBLINK;
+create table RPT_MONITOR_FIXTIMEONLINE as select * from RPT_MONITOR_FIXTIMEONLINE@BUS_DBLINK;
+create table RPT_MONITOR_GIS as select * from RPT_MONITOR_GIS@BUS_DBLINK;
+
+
+drop table RPT_INFRA_EMPLOYEE			;
+drop table RPT_INFRA_BUS				;
+drop table RPT_INFRA_SITE				;
+drop table RPT_INFRA_STATION			;
+drop table RPT_MONITOR_GIS				;
+drop table RPT_MONITOR_ONLINEDATA       ;
+drop table RPT_MONITOR_FIXTIMEONLINE    ;
+drop table RPT_MONITOR_AMPMPEAK         ;
+create table RPT_INFRA_EMPLOYEE			as select * from RPT_INFRA_EMPLOYEE@BUS_DBLINK;
+create table RPT_INFRA_BUS				as select * from RPT_INFRA_BUS@BUS_DBLINK;
+create table RPT_INFRA_SITE				as select * from RPT_INFRA_SITE@BUS_DBLINK;
+create table RPT_INFRA_STATION			as select * from RPT_INFRA_STATION@BUS_DBLINK;
+create table RPT_MONITOR_GIS			as select * from RPT_MONITOR_GIS@BUS_DBLINK;
+create table RPT_MONITOR_ONLINEDATA     as select * from RPT_MONITOR_ONLINEDATA@BUS_DBLINK;
+create table RPT_MONITOR_FIXTIMEONLINE  as select * from RPT_MONITOR_FIXTIMEONLINE@BUS_DBLINK;
+create table RPT_MONITOR_AMPMPEAK       as select * from RPT_MONITOR_AMPMPEAK@BUS_DBLINK;
+
+  
+exec P_BUSIQUERY_CORP;
+exec P_BUSIQUERY_BUSINFO;
+exec P_BUSIQUERY_EMP;
+exec P_BUSIQUERY_STATION;
+exec P_BUSIQUERY_SITE;
+exec P_BUSIQUERY_ROUTE;
+exec P_MACRO_CIA;
+

@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="dispatch-info">
+        <![CDATA[
+        select business_date AS BusinessDate,
+               run_date as RunDate,
+               BussId as BussId,
+               route_id as RouteID,
+               bus_id as BusID,
+               bus_card as BusCard,
+               shifttype as ShiftType,
+               driver_name as DriverName,
+               leave_station as LeaveStation,
+               arrive_station as ArriveStation,
+               actual_leavetime as ActualLeaveTime,
+               actual_arrivetime as ActualArriveTime,
+               actual_op_miles as ActualOpMiles,
+               area_code as AreaCode,
+               org_group as OrgGroup,
+               org_group_id as OrgGroupId,
+               row_number() over (order by leave_station) as RowNumber,
+               count(*) over () as TotalItems
+        From RPT_BUSIQUERY_DISPATCH_RECORD      
+        ]]>
+  </Query>
+</Report>

@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="caranalyze-data">
+    <![CDATA[
+      SELECT   YEARMONTH AS searchdate,
+               OWN_BUS_COUNT AS owncount,
+               STD_BUS_COUNT AS  stdcount,
+               ADVANCED_BUS_COUNT AS advancount,
+               AIRCON_BUS_COUNT AS aircount,
+               LOWFLOOR_BUS_COUNT lowcount,
+               GAS_BUS_COUNT gascount,
+               DIESEL_BUS_COUNT diecount,
+               CNG_BUS_COUNT cngcount,
+               MIX_BUS_COUNT mixcount,
+               AREA_CODE AS AreaCode,
+               ORG_GROUP AS ParentOrgname,
+               ORG_GROUP_ID as parentid
+               FROM RPT_SPLYSECU_BUSINVEST
+    ]]>
+  </Query>
+</Report>

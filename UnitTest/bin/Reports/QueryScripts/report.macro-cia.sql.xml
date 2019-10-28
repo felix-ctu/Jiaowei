@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="cia_business_date">
+    <![CDATA[
+      select max(t.business_date) business_date from (
+      select max(business_date) business_date from rpt_macro_cia_bus_income
+      union
+      select max(business_date) business_date from rpt_macro_cia_bus_inst
+      union
+      select max(business_date) business_date from rpt_macro_cia_bus_invest
+      union
+      select max(business_date) business_date from rpt_macro_cia_cap_invest
+      union 
+      select max(business_date) business_date from rpt_macro_cia_sve_quty ) t 
+    ]]>
+  </Query>
+  <Query name="cia_bus_inst">
+    <![CDATA[
+      select 1 tag,t.* from rpt_macro_cia_bus_inst t
+      where t.area_code=:p_area_code and nvl(t.org_group,'区域全部') like '%' || :p_org_group || '%' 
+      and extract(year from t.business_date)=extract(year from to_date(:p_date,'yyyy-mm-dd'))
+      and extract(month from t.business_date)=extract(month from to_date(:p_date,'yyyy-mm-dd'))
+      union
+      select 2 tag,t.* from rpt_macro_cia_bus_inst t
+      where t.area_code=:p_area_code and nvl(t.org_group,'区域全部') like '%' || :p_org_group || '%' 
+      and extract(year from t.business_date)=extract(year from add_months(to_date(:p_date,'yyyy-mm-dd'),-1))
+      and extract(month from t.business_date)=extract(month from add_months(to_date(:p_date,'yyyy-mm-dd'),-1))
+    ]]>
+  </Query>
+  <Query name="cia_bus_invest">
+    <![CDATA[
+      select 1 tag,t.* from rpt_macro_cia_bus_invest t
+      where t.area_code=:p_area_code and nvl(t.org_group,'区域全部') like '%' || :p_org_group || '%' 
+      and extract(year from t.business_date)=extract(year from to_date(:p_date,'yyyy-mm-dd'))
+      and extract(month from t.business_date)=extract(month from to_date(:p_date,'yyyy-mm-dd'))
+      union
+      select 2 tag,t.* from rpt_macro_cia_bus_invest t
+      where t.area_code=:p_area_code and nvl(t.org_group,'区域全部') like '%' || :p_org_group || '%' 
+      and extract(year from t.business_date)=extract(year from add_months(to_date(:p_date,'yyyy-mm-dd'),-1))
+      and extract(month from t.business_date)=extract(month from add_months(to_date(:p_date,'yyyy-mm-dd'),-1))
+    ]]>
+  </Query>
+  <Query name="cia_sve_quty">
+    <![CDATA[
+      select 1 tag,t.* from rpt_macro_cia_sve_quty t
+      where t.area_code=:p_area_code and nvl(t.org_group,'区域全部') like '%' || :p_org_group || '%' 
+      and extract(year from t.business_date)=extract(year from to_date(:p_date,'yyyy-mm-dd'))
+      and extract(month from t.business_date)=extract(month from to_date(:p_date,'yyyy-mm-dd'))
+      union
+      select 2 tag,t.* from rpt_macro_cia_sve_quty t
+      where t.area_code=:p_area_code and nvl(t.org_group,'区域全部') like '%' || :p_org_group || '%' 
+      and extract(year from t.business_date)=extract(year from add_months(to_date(:p_date,'yyyy-mm-dd'),-1))
+      and extract(month from t.business_date)=extract(month from add_months(to_date(:p_date,'yyyy-mm-dd'),-1))
+    ]]>
+  </Query>
+  <Query name="cia_cap_invest">
+    <![CDATA[
+      select 1 tag,t.* from rpt_macro_cia_cap_invest t
+      where t.area_code=:p_area_code and nvl(t.org_group,'区域全部') like '%' || :p_org_group || '%' 
+      and t.business_date=to_date(:p_date,'yyyy-mm-dd')
+      union
+      select 2 tag,t.* from rpt_macro_cia_cap_invest t
+      where t.area_code=:p_area_code and nvl(t.org_group,'区域全部') like '%' || :p_org_group || '%'  
+      and t.business_date=to_date(:p_date,'yyyy-mm-dd')-1
+    ]]>
+  </Query>
+  <Query name="cia_bus_income">
+    <![CDATA[
+      select 1 tag,t.* from rpt_macro_cia_bus_income t
+      where t.area_code=:p_area_code and nvl(t.org_group,'区域全部') like '%' || :p_org_group || '%' 
+      and t.business_date=to_date(:p_date,'yyyy-mm-dd')
+      union
+      select 2 tag,t.* from rpt_macro_cia_bus_income t
+      where t.area_code=:p_area_code and nvl(t.org_group,'区域全部') like '%' || :p_org_group || '%'  
+      and t.business_date=to_date(:p_date,'yyyy-mm-dd')-1
+    ]]>
+  </Query>
+</Report>

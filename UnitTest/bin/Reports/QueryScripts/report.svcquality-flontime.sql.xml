@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="svcquality-flontime">
+    <![CDATA[
+      select 
+      t.fl_date, 
+      t.route_grade, 
+      t.route_id,
+      t.route_name,
+      t.first_run_count, 
+      t.frun_ontime_count, 
+      round(t.frun_ontime_ratio,2) frun_ontime_ratio, 
+      t.last_run_count, 
+      t.lrun_ontime_count, 
+      round(t.lrun_ontime_ratio,2) lrun_ontime_ratio, 
+      t.area_code, 
+      t.org_group, 
+      t.org_group_id 
+      from rpt_svcquality_flontime t 
+      where t.fl_date>=to_date(:p_from,'yyyy-mm-dd') and t.fl_date<=to_date(:p_to,'yyyy-mm-dd')
+        
+    ]]>
+  </Query>
+</Report>

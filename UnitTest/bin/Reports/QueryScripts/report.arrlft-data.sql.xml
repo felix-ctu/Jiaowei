@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="arrlft-data">
+    <![CDATA[
+      SELECT 
+      RUN_DATE			as searchdate,
+	    ROUTE_ID			as routeid,	
+	    BUS_SELF_ID				as busselfid,
+	    BUS_ID				as busid,
+	    BUS_CARD			as  buscard,	
+	    ISMANULOPT			as isman,
+	    ISAPPEND				as isapp,
+	    ARRLFT_FLAG			as arrlf,	
+	    STATION_ID			as stationid,	
+	    STATION_NAME		as stationname,	
+	    ACTDATETIME			as actime,
+	    RECDATETIME			as retime,
+	    SITE_NAME			  as sitename,
+	    AREA_CODE				as areacode,
+	    ORG_GROUP				as orgname,
+	    ORG_GROUP_ID		as orgid,
+      row_number() over (order by ROUTE_ID) as RowNumber,
+      count(*) over () as TotalItems
+      FROM RPT_BUSIQUERY_ARRLFT
+    
+    ]]>
+  </Query>
+</Report>

@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="load-capability-data">
+    <![CDATA[
+      select oper_date as OperatingDate,
+          '' as StartDate,
+          '' as EndDate,
+          dep_shift_count as SeqCount,
+          oper_mileage as RunMiles,
+          trans_capacity as LoadPassengerCapability,
+          trans_count_per_bus as LoadPassengerPerBus,
+          trans_count_per_km as  LoadPassengerPerMile,
+          org_group as OrgName,
+          org_group_id as OrgID,
+          '' as PeakHour ,
+          Area_Code as AreaCode from RPT_SPLYSECU_CAPACITY_INVEST
+      
+    ]]>
+  </Query>
+</Report>

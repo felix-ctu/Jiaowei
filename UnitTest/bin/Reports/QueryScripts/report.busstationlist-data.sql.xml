@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="busstationlist-data">
+    <![CDATA[
+      SELECT 	
+	      YEARMONTH			as searchdate,	
+	      STATION_COUNT				as stacount,
+	      HARBOR_SHAPED_COUNT		as harbcount,
+	      HANGE_STATION_COUNT		as hangecount,
+	      SHELTER_COUNT				as shelcount,
+	      ELECTRONIC_BOARD_COUNT	as eleccount,
+	      AREA_CODE					as areacode,
+	      ORG_GROUP 				as orgname,
+	      ORG_GROUP_ID      as orgid
+        
+      FROM RPT_INFRA_STATION
+    ]]>
+  </Query>
+</Report>

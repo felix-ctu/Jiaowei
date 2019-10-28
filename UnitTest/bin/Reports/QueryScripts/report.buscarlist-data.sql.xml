@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="buscarlist-data">
+    <![CDATA[
+      SELECT 	
+	      YEARMONTH		as searchdate,			
+	      OPER_BUS_COUNT	 as opercount,
+	      STD_BUS_COUNT		 as stdcount,	
+	      GAS_BUS_COUNT		 as  gascount,		
+	      DIESEL_BUS_COUNT		as diecount,	
+	      CNG_BUS_COUNT				as cngcount,
+	      ELE_BUS_COUNT				as elecount,
+	      MIX_BUS_COUNT				as mixcount,
+	      OTHER_BUS_COUNT			as othercount,
+	      AIRCON_BUS_COUNT		as aircount,
+	      NON_AIRCON_BUS_COUNT		as nonaircount,
+	      LUXURY_BUS_COUNT			  as luxcount,
+	      ADVANCED_BUS_COUNT		  as advancount,
+	      MEDIUM_BUS_COUNT			  as medcount,
+	      NORMAL_BUS_COUNT			  as norcount,
+	      LOWFLOOR_BUS_COUNT			as lowcount,
+	      NON_LOWFLOOR_BUS_COUNT	as nonlowcount,
+	      NON_OPER_BUS_COUNT		  as nonopercount,
+	      AREA_CODE 					   as areacode,
+	      ORG_GROUP 				  as  orgname, 
+	      ORG_GROUP_ID	       as orgid
+      FROM RPT_INFRA_BUS
+    ]]>
+  </Query>
+</Report>

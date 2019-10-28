@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="saleanalyze-data">
+    <![CDATA[
+      SELECT 
+            QUERY_DATE		as searchdate,			
+	          PREFERENTIAL_AMOUNT		as preamount,
+	          OPER_AMOUNT			as 		operamount,
+	          PREFERENTIAL_COUNT	 as precount,		
+	          FLOW_COUNT					as flowcount,
+	          AREA_CODE					 as areacode,
+	          ORG_GROUP_ID				as orgid,
+	          ORG_GROUP				    as orgname
+      FROM RPT_POLICYPREFER_PREFERENTIAL
+    ]]>
+  </Query>
+</Report>

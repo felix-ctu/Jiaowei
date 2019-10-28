@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="online-data">
+    <![CDATA[
+      SELECT oper_date AS OperatingDate,
+               oper_bus_count AS ServingBusCount,
+               own_bus_count AS AllBusCount,
+               BUS_UTILIZATION AS UtilizationRate,
+               area_code AS AreaCode,
+               ORG_GROUP_ID AS ParentOrgId,
+               ORG_GROUP AS ParentOrgName
+      FROM rpt_splysecu_busutilization
+     
+    ]]>
+  </Query>
+</Report>

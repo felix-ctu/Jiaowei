@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="splysecu-netinvest">
+    <![CDATA[
+      select * from rpt_splysecu_netinvest t where t.yearmonth=:p_yearmonth and t.area_code=:p_area_code
+    ]]>
+  </Query>
+</Report>

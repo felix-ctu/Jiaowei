@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="online-data">
+    <![CDATA[
+      SELECT  area_code AS AreaType,
+              org_group_id AS OrgGroupID,
+              org_group AS OrgGroup,
+              yearmonth AS YearMonth,
+              bus_lane_length AS BusLanLength,
+              priority_intersection_count AS PriorityJunctionCount
+      FROM rpt_splysecu_piorfacility
+    ]]>
+  </Query>
+</Report>
+

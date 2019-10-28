@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="employee">
+    <![CDATA[
+      SELECT   yearmonth AS YearMonth,
+               emp_count AS EmpCount,
+               driver_count AS DriverCount,
+               steward_count AS StewardCount,
+               dispatcher_count AS DispatcherCount,
+               ticket_supervisor_count AS TicketSupervisorCount,
+               clerk_count AS ClerkCount,
+               section_chief_count AS SectionChiefCount,
+               others_count AS OthersCount,
+               male_count AS MaleCount,
+               female_count AS FemaleCount,
+               area_code AS AreaCode,
+               org_group AS OrgGroup,
+               org_group_id AS OrgGroupId,
+               business_date AS BusinessDate
+      FROM rpt_infra_employee
+    ]]>
+  </Query>
+</Report>

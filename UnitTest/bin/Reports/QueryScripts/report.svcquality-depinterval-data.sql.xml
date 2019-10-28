@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="svcquality-depinterval">
+    <![CDATA[
+      select
+        area_code AS AreaCode,
+        org_group_id AS OrgGroupID,
+        org_group AS OrgGroup,
+        run_date AS RunDate,
+        route_id AS RouteID,
+        route_grade AS RouteGrade, 
+        dep_interval_failed AS DepIntervalFailed, 
+        total_dep AS TotalDepTimes,
+        pass_flag AS PassFlag, 
+        working_day_flag AS WorkingDayFlag
+      from rpt_svcquality_depinterval
+      where run_date>=to_date(:p_start_time,'yyyy-mm-dd') and run_date<=to_date(:p_end_time,'yyyy-mm-dd')
+    ]]>
+  </Query>
+</Report>

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>在线数历史查询</title>
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <script src="../../echarts/echarts.min.js"></script>
+    <script src="../../echarts/macarons.js"></script>
+    <link rel="stylesheet" href="../../bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="../../css/font-awesome.min.css">
+    <link rel="stylesheet" href="../../css/ionicons.min.css">
+    <link rel="stylesheet" href="../../css/AdminLTE.min.css">
+    <link rel="stylesheet" href="../../css/skins/_all-skins.min.css">
+    <link rel="stylesheet" href="../../css/bublic.css">
+    <!--[if lt IE 9]>
+    <script src="../../js/html5shiv.min.js"></script>
+    <script src="../../js/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+<div class="wrapper">
+    <header class="main-header">
+        <a href="#" class="logo"><span class="logo-lg"><b>CHENG DU</b> BUS</span></a>
+        <nav class="navbar navbar-static-top">
+            <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button"></a>
+        </nav>
+    </header>
+    <aside class="main-sidebar">
+        <section class="sidebar">
+            <div class="user-panel">
+                <div class="pull-left image">
+                    <img src="../../img/user2-160x160.jpg" class="img-circle" alt="User Image">
+                </div>
+                <div class="pull-left info">
+                    <p>成都市公共交通集团</p>
+                    <a href="#"><i class="fa fa-circle text-success"></i> bus在线</a>
+                </div>
+            </div>
+            <form action="#" method="get" class="sidebar-form">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="搜索...">
+              <span class="input-group-btn">
+                <button type="submit" name="search" id="search-btn" class="btn btn-flat"><i class="fa fa-search"></i>
+                </button>
+              </span>
+                </div>
+            </form>
+            <ul class="sidebar-menu">
+                <li class="header">菜单列表</li>
+                <li class="treeview">
+                    <a href="#">
+                        <i class="fa fa-dashboard"></i> <span>业务查询</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li><a href="../yewuchaxun/qiyeshuju.html"><i class="fa fa-circle-o"></i> 企业数据查询</a></li>
+                        <li><a href="../yewuchaxun/xianlushuju.html"><i class="fa fa-circle-o"></i>线路数据查询</a></li>
+                        <li><a href="../yewuchaxun/cheliangshuju.html"><i class="fa fa-circle-o"></i>车辆数据查询</a>
+                        <li><a href="../yewuchaxun/renyuanshuju.html"><i class="fa fa-circle-o"></i>人员数据查询</a></li>
+                        <li><a href="../yewuchaxun/zhandianshuju.html"><i class="fa fa-circle-o"></i>站点数据查询</a></li>
+                        <li><a href="../yewuchaxun/changzhanshuju.html"><i class="fa fa-circle-o"></i>场站数据查询</a></li>
+                    </ul>
+                </li>
+                <li class="active treeview">
+                    <a href="#">
+                        <i class="fa fa-files-o"></i>
+                        <span>车辆监控</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li><a href="gisjiankong.html"><i class="fa fa-circle-o"></i> GIS监控</a></li>
+                        <li class="active"><a href="#"><i class="fa fa-circle-o"></i>在线数历史查询</a></li>
+                        <li><a href="gudingshiduan.html"><i class="fa fa-circle-o"></i> 固定时段车辆在线数量</a></li>
+                        <li><a href="zaogaofeng.html"><i class="fa fa-circle-o"></i> 早晚高峰车辆数统计</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fa fa-th"></i> <span>供应保障</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li><a href="../gongyingbaozhang/xianwangtouru.html"><i class="fa fa-circle-o"></i> 线网投入分析</a></li>
+                        <li><a href="../gongyingbaozhang/xianlutouru.html"><i class="fa fa-circle-o"></i>线路投入分析</a></li>
+                        <li><a href="../gongyingbaozhang/cheliangliyong.html"><i class="fa fa-circle-o"></i> 车辆利用率</a></li>
+                        <li><a href="../gongyingbaozhang/cheliangtouru.html"><i class="fa fa-circle-o"></i> 车辆投入分析</a></li>
+                        <li><a href="../gongyingbaozhang/yunnengtouru.html"><i class="fa fa-circle-o"></i>运能投入分析</a></li>
+                        <li><a href="../gongyingbaozhang/youxianshebei.html"><i class="fa fa-circle-o"></i>优先设施分析</a></li>
+                        <li><a href="../gongyingbaozhang/wanrenyongyou.html"><i class="fa fa-circle-o"></i> 万人拥有公交标台数</a></li>
+                        <li><a href="../gongyingbaozhang/keliuyuyunli.html"><i class="fa fa-circle-o"></i> 客流与运力配置</a></li>
+                    </ul>
+                </li>
+                <li class="treeview">
+                    <a href="#">
+                        <i class="fa fa-pie-chart"></i>
+                        <span>服务质量</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li><a href="../fuwuzhiliang/shoumoban.html"><i class="fa fa-circle-o"></i> 首末班准点率</a></li>
+                        <li><a href="../fuwuzhiliang/facheshouche.html"><i class="fa fa-circle-o"></i> 发车/收车时间分析</a></li>
+                    </ul>
+                </li>
+                <li class="treeview">
+                    <a href="#">
+                        <i class="fa fa-laptop"></i>
+                        <span>线网运行</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li><a href="../xianwangyunxing/xianwangfenxi.html"><i class="fa fa-circle-o"></i>线网分析</a></li>
+                        <li><a href="../xianwangyunxing/pingjunzhanju.html"><i class="fa fa-circle-o"></i>平均站距</a></li>
+                    </ul>
+                </li>
+                <li class="treeview">
+                    <a href="#">
+                        <i class="fa fa-edit"></i> <span>政策优惠</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li><a href="../zhengceyouhui/xianlushoumoban.html"><i class="fa fa-circle-o"></i> 线路首末班刷卡数据分析</a></li>
+                        <li><a href="../zhengceyouhui/zhandianshiduan.html"><i class="fa fa-circle-o"></i> 站点时段刷卡客流分析</a></li>
+                        <li><a href="../zhengceyouhui/youhuifenxi.html"><i class="fa fa-circle-o"></i>优惠分析</a></li>
+                    </ul>
+                </li>
+                <li class="treeview">
+                    <a href="#">
+                        <i class="fa fa-table"></i> <span>基础设施</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li><a href="../jichushebei/congyerenyuan.html"><i class="fa fa-circle-o"></i> 从业人员</a></li>
+                        <li><a href="../jichushebei/gongjiaocheliang.html"><i class="fa fa-circle-o"></i> 公交车辆</a></li>
+                        <li><a href="../jichushebei/gongjiaochangzhan.html"><i class="fa fa-circle-o"></i> 公交场站</a></li>
+                        <li><a href="../jichushebei/gongjiaozhandian.html"><i class="fa fa-circle-o"></i> 公交站点</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fa fa-calendar"></i> <span>新功能</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li><a href="../xingongneng/zuidafache.html"><i class="fa fa-circle-o"></i>最大发车间隔保障率</a></li>
+                        <li><a href="#"><i class="fa fa-circle-o"></i>公交线路收车时间合理性</a></li>
+                        <li><a href="#"><i class="fa fa-circle-o"></i>视频监控</a></li>
+                        <li><a href="#"><i class="fa fa-circle-o"></i>电子站牌完好率</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fa fa-envelope"></i> <span>宏观分析</span>
+            <span class="pull-right-container">
+             <i class="fa fa-angle-left pull-right"></i>
+            </span>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li><a href="#"><i class="fa fa-circle-o"></i>综合指标分析</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+    </aside>
+    <!--*************右边内容部分开始**************-->
+    <div class="content-wrapper">
+        <section class="content-header">
+            <h1>
+               车辆监控
+                <small>在线数历史查询</small>
+            </h1>
+        </section>
+        <section class="content">
+            <div class="row">
+                <!--*********************图表内容开始***********************************-->
+                <div id="main"class="table-responsive">
+                    <form class="form-inline">
+                        <div class="form-group">
+                            <label>运营日期</label>
+                            <select class="form-control">
+                                <option>2016.7.18</option>
+                            </select>
+                            <label>时间范围</label>
+                            <input type="text" class="form-control" >
+                            <label>至</label>
+                            <input type="text" class="form-control" >
+                            <label>查询间隔</label>
+                            <select class="form-control">
+                                <option>1小时</option>
+                                <option>2小时</option>
+                                <option>3小时</option>
+                                <option>4小时</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn  btn-primary">查 询</button>
+                        <button type="submit" class="btn  btn-primary">导出</button>
+                        <button type="submit" class="btn  btn-primary">打印</button>
+                    </form>
+                        <div id="line" style="width:100%;height:400px"></div>
+                    <script>
+                        var myChart = echarts.init(document.getElementById('line'),'macarons');
+                        option = {
+                            title: {
+
+                            },
+                            tooltip: {
+                                trigger: 'axis'
+                            },
+                            legend: {
+                                data:['运营车辆在线数','非运营车辆在线数','全部车辆在线数']
+                            },
+                            toolbox: {
+                                show: true,
+                                feature: {
+                                    magicType: {show: true, type: ['stack', 'tiled']},
+                                    saveAsImage: {show: true}
+                                }
+                            },
+                            xAxis: {
+                                type: 'category',
+                                boundaryGap: false,
+                                data: ['7：00','8：00','9：00','10：00','11：00','12：00','13：00','14:00','15:00'
+                                ,'16:00','17:00','18:00','19:00','20:00','21:00','22:00'
+                                ]
+                            },
+                            yAxis: {
+                                type: 'value'
+                            },
+                            series: [{
+                                name: '运营车辆在线数',
+                                type: 'line',
+                                smooth: true,
+                                data: [10, 12, 21, 54, 260, 830, 710,900,1180,1100,990,980,609,689,259,22]
+                            },
+                                {
+                                    name: '非运营车辆在线数',
+                                    type: 'line',
+                                    smooth: true,
+                                    data: [30, 182, 434, 791, 390, 30, 10,23,54,43,66,110,34,54,65,80]
+                                },
+                                {
+                                    name: '全部车辆在线数',
+                                    type: 'line',
+                                    smooth: true,
+                                    data: [40,200,467,1000,1100,343,789,890,232,765,467,289,765,890,245,777]
+                                }]
+                        };
+                        myChart.setOption(option);
+                    </script>
+                    <table id="tables" class="table table-bordered table-striped" style="width:100%;margin-top: 2%">
+                        <thead>
+                        <tr>
+                            <td>时间</td>
+                            <td>运营车辆在线数</td>
+                            <td>全部车辆在线数</td>
+                            <td>车辆利用率</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>2016.7.8 07:00</td>
+                            <td>10</td>
+                            <td>40</td>
+                            <td>25%</td>
+                        </tr>
+                        <tr>
+                            <td>2016.7.8 08:00</td>
+                            <td>22</td>
+                            <td>122</td>
+                            <td>30%</td>
+                        </tr>
+                        <tr>
+                            <td>2016.7.8 09:00</td>
+                            <td>34</td>
+                            <td>90</td>
+                            <td>35%</td>
+                        </tr>
+                        <tr>
+                            <td>2016.7.8 10:00</td>
+                            <td>78</td>
+                            <td>133</td>
+                            <td>40%</td>
+                        </tr>
+                        <tr>
+                            <td>2016.7.8 11:00</td>
+                            <td>121</td>
+                            <td>235</td>
+                            <td>60%</td>
+                        </tr>
+                        <tr>
+                            <td>2016.7.8 12:00</td>
+                            <td>60</td>
+                            <td>40</td>
+                            <td>62%</td>
+                        </tr>
+                        <tr>
+                            <td>2016.7.8 13:00</td>
+                            <td>234</td>
+                            <td>546</td>
+                            <td>65%</td>
+                        </tr>
+                        <tr>
+                            <td>2016.7.8 14:00</td>
+                            <td>210</td>
+                            <td>440</td>
+                            <td>55%</td>
+                        </tr>
+                        <tr>
+                            <td>2016.7.8 15:00</td>
+                            <td>244</td>
+                            <td>453</td>
+                            <td>53%</td>
+                        </tr>
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <td>中心城区汇总数据</td>
+                            <td colspan="3"></td>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <!--*********************图表内容结束***********************************-->
+            </div>
+        </section>
+    </div>
+    <!--*************右边内容部分结束**************-->
+    <!--*************页脚部分开始**************-->
+    <footer class="main-footer">
+        <div class="pull-right hidden-xs">
+            <b>Version</b> 2.3.6
+        </div>
+        <strong>Copyright &copy; 2014-2016 <a href="http://almsaeedstudio.com">Almsaeed Studio</a>.</strong> All rights
+        reserved.
+    </footer>
+    <!--*************页脚部分结束**************-->
+</div>
+</body>
+<script src="../../js/jquery-1.11.3.min.js"></script>
+<script src="../../echarts/echarts.min.js"></script>
+<script src="../../echarts/macarons.js"></script>
+<script src="../../js/jquery-ui.min.js"></script>
+<script src="../../js/jquery.dataTables.min.js"></script>
+<script>
+    $.widget.bridge('uibutton', $.ui.button);
+</script>
+<script>
+    $(document).ready(function() {
+        $('#tables').dataTable({
+            "lengthMenu": [
+                [8]
+            ],//每页显示条数设置
+            "lengthChange": false,//是否允许用户自定义显示数量
+            "bPaginate": true, //翻页功能
+            "bFilter": false, //列筛序功能
+            "searching": false,//本地搜索
+            "ordering": true, //排序功能
+            "Info": true,//页脚信息
+            "autoWidth": true,//自动宽度
+            "oLanguage": {//国际语言转化
+                "oAria": {
+                    "sSortAscending": " - click/return to sort ascending",
+                    "sSortDescending": " - click/return to sort descending"
+                },
+                "sInfo": "当前显示 _START_ 到 _END_ 条，共 _TOTAL_ 条记录。",
+                "oPaginate": {
+                    "sFirst": "首页",
+                    "sPrevious": " 上一页 ",
+                    "sNext": " 下一页 ",
+                    "sLast": " 尾页 "
+                }
+            }
+        });
+
+    });
+</script>
+<script src="../../bootstrap/js/bootstrap.min.js"></script>
+<script src="../../js/raphael-min.js"></script>
+<script src="../../js/app.min.js"></script>
+<script src="../../js/pages/dashboard.js"></script>
+<script src="../../js/demo.js"></script>
+</html>

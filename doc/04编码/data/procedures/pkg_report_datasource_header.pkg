@@ -1,0 +1,41 @@
+create or replace package pkg_report_datasource is
+/************************************************************************************************
+*                                                                                               *
+*  Module Name : pkg_report_datasource                                                          *
+*                                                                                               *
+*  File Name   : pkg_report_datasource.pkg                                                      *
+*                                                                                               *
+*  Description : pkg_report_datasource                                                          *
+*                                                                                               *
+*  Code Section:                                                                                *
+* Date      Version     Author               Description                                        *
+* --------- -------- ---------------  ----------------------------------------------------      *
+*                                                                                               *
+* 1-Dec-16   1.0      Liu Mingshun      Initial release                                         *
+************************************************************************************************/
+
+function	getbusinessdate(v_date date default null) return date;
+procedure	p_pre_batch(p_date in date default null);
+procedure	p_enrich_map_org_regional     	;
+procedure	p_busiquery_businfo           	;
+procedure	p_busiquery_corp              	;
+procedure	p_busiquery_emp               	;
+procedure	p_busiquery_route             	;
+procedure	p_busiquery_site              	;
+procedure	p_busiquery_station           	;
+procedure	p_infra_info                  	;
+procedure	p_first_last_run              	;
+procedure	p_monitor_info                	;
+procedure	p_netoper_avgdistance         	;
+procedure	p_svcquality_depcls           	;
+procedure	p_svcquality_depinterval      	;
+procedure	p_svcquality_flontime         	;
+procedure	p_svcquality_clsrationality   	;
+procedure	p_splysecu_info               	;
+procedure	p_policyprefer_info           	;
+procedure	p_macro_cia                   	;
+procedure	p_proc_audit(p_date date default null);
+
+END pkg_report_datasource;
+/
+

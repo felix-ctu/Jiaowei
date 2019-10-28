@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="enterprise-info">
+    <![CDATA[
+      SELECT org_id,
+               org_name,
+               linkman,
+               principal,
+               emp_count,
+               bus_count,
+               route_count,
+               site_count,
+               driver_count,
+               address,
+               register_date,
+               telephone,
+               fax,
+               post,
+               region_area,
+               area_code,
+               parent_org_id,
+               parent_org_name,
+               org_grade
+      FROM rpt_busiquery_corp
+    ]]>
+  </Query>
+  <Query name="organization-info">
+    <![CDATA[
+      select a.orgid,a.orgname from mcorginfogs a where a.isactive=1 and a.orgid in (select b.parentorgid from mcorginfogs b)
+    ]]>
+  </Query>
+</Report>

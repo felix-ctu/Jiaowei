@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="average-distance">
+    <![CDATA[
+      SELECT yearmonth AS OperatingMonth,
+               route_name AS RouteName,
+               avg_station_distance AS AverageDistance,
+               area_code AS AreaCode,
+               org_group_id AS ParentOrgId,
+               org_group AS ParentOrgName,
+               row_number() over (order by route_name) as RowNumber,
+               count(*) over () as TotalItems,
+               avg(avg_station_distance) OVER () as TotalAverageDistance
+      FROM rpt_netoper_avgdistance
+    ]]>
+  </Query>
+</Report>

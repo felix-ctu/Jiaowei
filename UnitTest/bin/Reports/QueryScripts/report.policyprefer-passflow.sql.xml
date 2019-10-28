@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="policyprefer-passflow">
+    <![CDATA[
+      select * from rpt_policyprefer_passflow t
+    ]]>
+  </Query>
+</Report>

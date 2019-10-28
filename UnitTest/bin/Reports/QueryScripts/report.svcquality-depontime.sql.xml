@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="svcquality-depontime">
+    <![CDATA[
+      select 
+      RUN_DATE as RunDate,
+Morning_M_COUNT as MorningMCount,
+Morning_M_ONTIME_COUNT as MorningMOntimeCount,
+Morning_M_OnTime_ratio as MorningMOnTimeRatio,
+Morning_H_COUNT as MorningHCount,
+Morning_H_ONTIME_COUNT as MorningHOntimeCount,
+Morning_H_OnTime_ratio as MorningHOnTimeRatio,
+Noon_M_COUNT as NoonMCount,
+Noon_M_ONTIME_COUNT as NoonMOntimeCount,
+Noon_M_OnTime_ratio as NoonMOnTimeRatio,
+Afternoon_M_COUNT as AfternoonMCount,
+Afternoon_M_ONTIME_COUNT as AfternoonMOntimeCount,
+Afternoon_M_OnTime_ratio as AfternoonMOnTimeRatio,
+Afternoon_H_COUNT as AfternoonHCount,
+Afternoon_H_ONTIME_COUNT as AfternoonHOntimeCount,
+Afternoon_H_OnTime_ratio as AfternoonHOnTimeRatio,
+Org_Group as OrgGroup 
+from RPT_SVCQUALITY_DEPONTIME 
+    ]]>
+  </Query>
+</Report>
+

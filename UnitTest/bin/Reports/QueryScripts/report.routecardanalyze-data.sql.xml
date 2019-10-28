@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="routecardanalyze-data">
+    <![CDATA[
+      SELECT    QUERY_DATE as searchdate,				
+	              ROUTE_ID as routeid,				
+	              ROUTE_NAME as routename,				
+	              LEAVE_STATION as lestation,			
+	              ARRIVE_STATION as arstation,			
+	              FIRST_LAST_FLAG as routesend,			
+	              LEAVE_TIME as letime,			
+	              ARRIVE_TIME as artime,			
+	              CARD_NO as carnumber,					
+	              BUS_LENGTH as carlength,					
+	              COUNT_BY_CARD as cardcount,		
+	              AREA_CODE as areacode,				
+	              ORG_GROUP_ID as orgid,		
+	              ORG_GROUP as orgname,
+               row_number() over (order by ROUTE_ID) as RowNumber,
+               count(*) over () as TotalItems
+      FROM RPT_POLICYPREFER_FLCARD
+    ]]>
+  </Query>
+</Report>

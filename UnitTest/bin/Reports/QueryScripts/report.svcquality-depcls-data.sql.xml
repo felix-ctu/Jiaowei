@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="svcquality-depcls">
+    <![CDATA[
+      select RUN_DATE, DEPCLS_TYPE, START_TIME, END_TIME, ROUTE_COUNT,
+      AREA_CODE, ORG_GROUP, ORG_GROUP_ID, BUSINESS_DATE, 
+      START_TIME || '-' || END_TIME AS TimeStamps,
+      row_number() over (order by START_TIME) as RowNumber
+      from rpt_svcquality_depcls t
+    ]]>
+  </Query>
+</Report>

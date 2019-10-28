@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="svcquality-avg-interval">
+    <![CDATA[
+      SELECT run_date AS RunDate,
+               route_id AS RouteId,
+               time_section AS TimeSection,
+               run_direction AS RunDirection,
+               dispatch_interval AS DispatchInterval,
+               area_code AS AreaCode,
+               org_group AS OrgGroup,
+               org_group_id AS OrgGroupId
+      FROM rpt_svcquality_avginterval
+    ]]>
+  </Query>
+</Report>

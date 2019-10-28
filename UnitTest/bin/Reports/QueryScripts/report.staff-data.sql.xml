@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query>
+    <![CDATA[
+    select
+        EMP_NAME as StaffName,
+        POSITION_TYPE as Position,
+        SEX as Gender,
+        START_DATE as JoinedTime,
+        LISENCE_TYPE as LisenceType,
+        ORG_NAME as Company,
+        Certificate_Number as CertificateNumber,
+        ROUTE_ID as RouteID,
+        ID as StaffID,
+        DESIGNATION as Designation,
+        IC_CARD as ICCard,
+        DRIVE_EXPERIENCE as DriveExperience,
+        row_number() over (order by EMP_ID) as RowNumber,
+        count(*) over () as TotalItems
+    from RPT_BUSIQUERY_EMP
+        ]]>
+  </Query>
+  <!--
+  <Query>
+    <![CDATA[
+select EMP.EMPNAME AS StaffName,
+decode(EMP.POSITIONTYPE, 1,'驾驶员',2,'',3,'',4,'',5,'') as Position,
+EMP.CARDID AS STAFFID,
+DECODE(EMP.SEX, 1,'男', 2,'女') AS Gender,
+EMP.STARTDATE AS JoinedTime,
+EMP.DRIVETYPE ,
+ORG.ORGNAME AS Company,
+ROU.RouteID 
+from MCEMPLOYEEINFOGS EMP , MCORGINFOGS ORG , mcremproutegs ROU 
+where EMP.ORGID = ORG.ORGID 
+AND ROU.EMPID = EMP.EMPID 
+and EMP.isactive = 1 
+    ]]>
+  </Query>
+  -->
+</Report>

@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Report>
+  <Query name="site-info">
+    <![CDATA[
+      SELECT 
+      rownum as sequence,
+      site_id,
+               org_id,
+               site_name,
+               site_type,
+               longitude,
+               latitude,
+               cctv,
+               site_from,
+               site_used_for,
+               route_name,
+               area_code,
+               region_area,
+               site_square,
+               site_volume,
+               row_number() over (order by rownum) as RowNumber,
+               count(*) over () as TotalItems
+      FROM rpt_busiquery_site
+    ]]>
+  </Query>
+</Report>
